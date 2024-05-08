@@ -1,0 +1,13 @@
+{
+  "prefix": "?",
+  "guild": {
+    "id": ,
+    "roles": {
+      "admin":
+    },
+    "channels": {
+      "welcome": ,
+      "posts":
+    }
+  }
+}
