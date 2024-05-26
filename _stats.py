@@ -23,7 +23,7 @@ class ProjectReader:
         self.path = pathlib.Path(os.getcwd()) if path is None else pathlib.Path(path)
         self.banned = banned
 
-    def project_stats(self) -> None:
+    def project_stats(self) -> str:
         """
         Print the project statistics.
         :return: None
@@ -35,14 +35,7 @@ class ProjectReader:
         self.failed = failed
         self.size = size
 
-        print("-" * 50)
-        print(f"Reading files in '{self.path}':")
-        print(f"Total lines: {lines} (~{lines//(files - failed)} lines per file)")
-        print(f"Total files: {files} (Failed {failed} files)")
-        print(f"Total directories: {self.directories}")
-        print(f"Total files read: {files - failed}")
-        print(f"Total size: {self._format_size()}")
-        print("-" * 50)
+        return f"{'-' * 50}\nReading files in '{self.path}':\nTotal lines: {lines} (~{lines//(files - failed)} lines per file)\nTotal files: {files} (Failed {failed} files)\nTotal directories: {self.directories}\nTotal files read: {files - failed}\nTotal size: {self._format_size()}\n{'-' * 50}"
 
     def _format_size(self) -> str:
         """
@@ -131,11 +124,17 @@ def main(debug: bool, path: str | None = None) -> None:
         '.idea',
         '__pycache__',
         os.path.basename(__file__),
-        # Add more here
+        '.gitignore',
+        '.git',
+        '.vscode',
+        '.gitattributes',
+        '.gitmodules',
+        'LICENSE',
+        'README.md'
     )
 
     reader = ProjectReader(banned=banned, path=path or os.getcwd())
-    reader.project_stats()
+    print(reader.project_stats())
 
     if debug:
         snap = tracemalloc.take_snapshot()

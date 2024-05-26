@@ -62,22 +62,26 @@ class Sassy(commands.Bot):
         if cogs.is_file():
             raise OSError("\"cogs\" should be a folder/directory, not a file!")
 
-        await self._process_folder(cogs, 'cogs.')
+        await self._process_folder(cogs, 'cogs')
 
     async def _process_folder(self, path: pathlib.Path, path_start: str):
+        banned = (
+            '__pycache__'
+        )
+
         for item in path.iterdir():
-            if item.name == "__pycache__":
+            if item.name in banned:
                 continue
-            elif item.is_dir():
-                await self._process_folder(item, f"{path_start}{item.name}")
-                continue
-            elif item.name.endswith(".py"):
-                p = f"{path_start}.{item.name[:-3]}"
+
+            if item.is_dir():
+                await self._process_folder(item, f"{path_start}.{item.name}")
+            elif item.is_file() and item.suffix == ".py":
+                module = f"{path_start}.{item.stem}"
                 try:
-                    await self.load_extension(p)
-                    print(f"Loaded {p}")
+                    await self.load_extension(module)
+                    print(f"Loaded {module}")
                 except Exception as e:
-                    print(f"Failed to load cog '{p}' with reason: \n{e}\n")
+                    print(f"Failed to load {module} with error: {e}")
 
 
 def main() -> None:
@@ -96,7 +100,7 @@ def main() -> None:
     collection = db[branch]
 
     bot = Sassy(command_prefix=config["prefix"], intents=intents, config=config, db=collection)
-
+    
     bot.run(os.getenv("TOKEN"))
 
 
