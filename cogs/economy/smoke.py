@@ -21,7 +21,7 @@ class Smoke(commands.Cog):
         curs = await self.bot.db.find_one({"uid": user.id}, projection={"choomah_coins": 1})
 
         if curs is None:
-            await add(bot=self.bot, member=user, xp=0, level=0, choomah_coins=0, logs=None)
+            await add(bot=self.bot, member=user, choomah_coins=coins_found, logs=None)
             message = f"You go smoking with Lez and the mates and find **{coins_found}** choomah coins!"
         else:
             current = curs["choomah_coins"]

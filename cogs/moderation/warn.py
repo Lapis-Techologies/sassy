@@ -44,7 +44,6 @@ class Warn(commands.Cog):
             await add(
                 bot=self.bot,
                 member=user,
-                choomah_coins=0,
                 logs=[
                     {
                         "case_id": case_id,

@@ -33,7 +33,7 @@ class UserInfo(commands.Cog):
         curs = await self.bot.db.find_one({"uid": member.id}, projection={"logs": 1})
 
         if curs is None:
-            await add(bot=self.bot, member=user, xp=0, level=0, choomah_coins=0, logs=None)
+            await add(bot=self.bot, member=user)
 
             embed.add_field(name="Choomah Coins", value="0", inline=False)
             embed.add_field(name="Logs", value="No logs found for this user.", inline=False)

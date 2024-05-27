@@ -20,7 +20,7 @@ class Bal(commands.Cog):
         curs = await self.bot.db.find_one({"uid": user.id}, projection={"choomah_coins": 1})
 
         if curs is None:
-            await add(bot=self.bot, member=user, xp=0, level=0, choomah_coins=0, logs=None)
+            await add(bot=self.bot, member=user)
 
             # await inter.response.send_message("You have **0** choomah coins!")
             message = "You have **0** choomah coins!"

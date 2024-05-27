@@ -78,7 +78,7 @@ class Mutes(commands.Cog):
         if curs is None:
             await inter.followup.send("No mutes found for this user.", ephemeral=True)
 
-            await add(bot=self.bot, member=user, xp=0, level=0, choomah_coins=0, logs=None)
+            await add(bot=self.bot, member=user)
 
             return
 

@@ -34,7 +34,7 @@ class RWarn(commands.Cog):
         curs = await self.bot.db.find_one({"uid": user.id}, projection={"logs": 1})
 
         if curs is None:
-            await add(bot=self.bot, member=user, xp=0, level=0, choomah_coins=0, logs=None)
+            await add(bot=self.bot, member=user)
             await inter.followup.send("Case ID not found!", ephemeral=True)
         else:
             for log in curs["logs"]:

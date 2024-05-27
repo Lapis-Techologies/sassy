@@ -27,7 +27,7 @@ class Add(commands.Cog):
         if curs is not None:
             message = "User already exists in the database!"
         else:
-            await addd(bot=self.bot, member=user, xp=0, level=0, choomah_coins=0, logs=None)
+            await addd(bot=self.bot, member=user, logs=None)
 
             message = "User added to the database!"
 

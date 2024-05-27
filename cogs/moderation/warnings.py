@@ -83,7 +83,7 @@ class Warnings(commands.Cog):
         )
 
         if curs is None:
-            await add(bot=self.bot, member=user, xp=0, level=0, choomah_coins=0, logs=None)
+            await add(bot=self.bot, member=user)
         else:
             for log in curs["logs"]:
                 if log["action"] == "warn":

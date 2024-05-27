@@ -39,7 +39,7 @@ class Hunt(commands.Cog):
 
         if curs is None:
             new_bal = offset if offset >= 0 else 0
-            await add(bot=self.bot, member=user, xp=0, level=0, choomah_coins=new_bal, logs=None)
+            await add(bot=self.bot, member=user, choomah_coins=new_bal, logs=None)
         else:
             new_bal = curs["choomah_coins"] + offset
             new_bal = new_bal if new_bal >= 0 else 0
