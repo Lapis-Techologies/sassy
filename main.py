@@ -4,7 +4,7 @@ import json
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 
 class Sassy(commands.Bot):
@@ -14,12 +14,13 @@ class Sassy(commands.Bot):
     def __init__(self, config: json, db, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.config = config
-        self.db = db
+        self.db: AsyncIOMotorDatabase = db
         self.remove_command("help")
 
     async def on_ready(self):
         await self.process_config(self.config)
         await self.load_cogs()
+
         synced = len(await self.tree.sync())
         print(f"Synced {synced} commands!")
 
@@ -42,13 +43,11 @@ class Sassy(commands.Bot):
             raise KeyError("You need to provide guild channels in the config.json file!")
 
         self.config["guild"] = self.get_guild(guild_id)
-
+        self.config["channels"] = {}
         self.config["roles"] = {}
 
         for role in guild_roles:
             self.config["roles"][role] = self.config["guild"].get_role(guild_roles[role])
-
-        self.config["channels"] = {}
 
         for channel in guild_channels:
             self.config["channels"][channel] = self.config["guild"].get_channel(guild_channels[channel])
@@ -60,7 +59,7 @@ class Sassy(commands.Bot):
         cogs = pathlib.Path(os.path.join(os.getcwd(), "cogs"))
 
         if cogs.is_file():
-            raise OSError("\"cogs\" should be a folder/directory, not a file!")
+            raise OSError("'cogs' should be a folder/directory, not a file!")
 
         await self._process_folder(cogs, 'cogs')
 
@@ -100,7 +99,6 @@ def main() -> None:
     collection = db[branch]
 
     bot = Sassy(command_prefix=config["prefix"], intents=intents, config=config, db=collection)
-    
     bot.run(os.getenv("TOKEN"))
 
 

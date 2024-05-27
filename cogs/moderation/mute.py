@@ -23,8 +23,7 @@ class Mute(commands.Cog):
         if not invoker.get_role(self.bot.config['roles']['admin'].id):
             await inter.followup.send("You do not have permission to use this command!", ephemeral=True)
             return
-
-        if user.get_role(self.bot.config['roles']['admin'].id):
+        elif user.get_role(self.bot.config['roles']['admin'].id):
             await inter.followup.send("You cannot mute an admin!", ephemeral=True)
             return
         elif user == invoker:
@@ -33,12 +32,10 @@ class Mute(commands.Cog):
         elif user.id == self.bot.user.id:
             await inter.followup.send("hehe you can't mute me mate!", ephemeral=True)
             return
-
-        if user.is_timed_out():
+        elif user.is_timed_out():
             await inter.followup.send("This user is already muted!", ephemeral=True)
             return
-
-        if days == 0 and hours == 0 and minutes == 0:
+        elif days == 0 and hours == 0 and minutes == 0:
             await inter.followup.send("You must specify a time to mute the user for!", ephemeral=True)
             return
 

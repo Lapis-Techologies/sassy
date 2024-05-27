@@ -13,6 +13,7 @@ class Help(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="help", description="Get help on a command.")
+    @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
     async def help(self, inter: Interaction):
         await inter.response.defer()
 
@@ -22,10 +23,10 @@ class Help(commands.Cog):
             color=discord.Color.blurple()
         )
 
-        commands = [com for com in self.bot.tree.walk_commands() if isinstance(com, app_commands.Command)]
+        cmds = [com for com in self.bot.tree.walk_commands() if isinstance(com, app_commands.Command)]
         groups = [com for com in self.bot.tree.walk_commands() if isinstance(com, app_commands.Group)]
 
-        for slash_command in commands:
+        for slash_command in cmds:
             embed.add_field(
                 name=slash_command.name,
                 value=slash_command.description if slash_command.description else "No description provided.",

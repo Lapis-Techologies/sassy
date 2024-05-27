@@ -1,5 +1,4 @@
 import random
-import discord
 from typing import TYPE_CHECKING
 from discord import app_commands, Interaction
 from discord.ext import commands
@@ -27,11 +26,11 @@ class Hunt(commands.Cog):
         if dice == 0:
             # Add
             offset = random.randint(1, 15)
-            message = f"You found {offset} choomah coins!"
+            message = f"You goto choomah island and find {offset} choomah coins!"
         elif dice == 1:
             # Remove
-            offset = -(random.randint(1, 15))
-            message = f"You Lost {abs(offset)} choomah coins!"
+            offset = random.randint(-15, -1)
+            message = f"You goto choomah island and lose {abs(offset)} choomah coins!"
         else:
             # Nothing
             offset = 0
@@ -54,7 +53,6 @@ class Hunt(commands.Cog):
                 }
             })
 
-        # await inter.followup.send(f"You goto the choomah island find *{offset}* coins, your balance is now **{new_bal}**!")
         await inter.followup.send(f"{message} Your balance is now **{new_bal}**.")
 
 

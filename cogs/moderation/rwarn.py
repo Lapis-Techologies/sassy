@@ -1,7 +1,5 @@
-import datetime
 import discord
 from typing import TYPE_CHECKING
-from uuid import uuid4
 from discord.ext import commands
 from discord import app_commands, Interaction
 
@@ -34,32 +32,25 @@ class RWarn(commands.Cog):
 
         curs = await self.bot.db.find_one({"uid": user.id}, projection={"logs": 1})
 
-        found = False
-
         if curs is None:
             await self.bot.db.insert_one({
                 "uid": user.id,
                 "choomah_coins": 0,
                 "logs": [],
             })
+            await inter.followup.send("Case ID not found!", ephemeral=True)
         else:
             for log in curs["logs"]:
                 if log["case_id"] == case_id:
-                    found = True
-                    await self.bot.db.update_one({"uid": user.id}, {
+                    await self.bot.db.update_one({"uid": user.id}, {    # Remove the case
                         "$pull": {
                             "logs": {
                                 "case_id": case_id
                             }
                         }
                     })
+                    await inter.followup.send("Warning removed!", ephemeral=True)
                     break
-
-        if not found:
-            await inter.followup.send("Case ID not found!", ephemeral=True)
-            return
-
-        await inter.followup.send("Warning removed!", ephemeral=True)
 
 
 async def setup(bot: 'Sassy'):

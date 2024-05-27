@@ -24,16 +24,17 @@ class Add(commands.Cog):
         curs = await self.bot.db.find_one({"uid": user.id}, projection={"uid": 1})
 
         if curs is not None:
-            await inter.followup.send("User already exists in the database!", ephemeral=True)
-            return
+            message = "User already exists in the database!"
+        else:
+            self.bot.db.insert_one({
+                "uid": user.id,
+                "choomah_coins": 0,
+                "logs": []
+            })
 
-        self.bot.db.insert_one({
-            "uid": user.id,
-            "choomah_coins": 0,
-            "logs": []
-        })
+            message = "User added to the database!"
 
-        await inter.followup.send("User added to the database!", ephemeral=True)
+        await inter.followup.send(message, ephemeral=True)
 
 
 async def setup(bot: 'Sassy'):

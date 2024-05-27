@@ -21,16 +21,13 @@ class Ban(commands.Cog):
         if not invoker.get_role(self.bot.config['roles']['admin'].id):
             await inter.followup.send("You do not have permission to use this command!")
             return
-
-        if user.get_role(self.bot.config['roles']['admin'].id):
+        elif user.get_role(self.bot.config['roles']['admin'].id):
             await inter.followup.send("You cannot ban an admin!", ephemeral=True)
             return
-
-        if user == invoker:
+        elif user == invoker:
             await inter.followup.send("You cannot ban yourself!", ephemeral=True)
             return
-
-        if user.id == self.bot.user.id:
+        elif user.id == self.bot.user.id:
             await inter.followup.send("hehe you can't ban me mate!", ephemeral=True)
             return
 

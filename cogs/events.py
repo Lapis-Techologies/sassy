@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from discord.ext import commands
 from discord import app_commands, Interaction
 
+
 if TYPE_CHECKING:
     from main import Sassy
 
@@ -37,7 +38,7 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        await self.bot.config["channels"]["welcome"].send(f"Whats goin on mate? You're druggo #{len(member.guild.members)}, fuckin skits mate")
+        await self.bot.config["channels"]["welcome"].send(f"{member.mention} Whats goin on mate? You're druggo #{len(member.guild.members)}, fuckin skits mate")
 
         await self.bot.db.insert_one({
             "uid": member.id,

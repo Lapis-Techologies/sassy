@@ -13,7 +13,7 @@ class UnBan(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="unban", description="UnBan a user from the server.")
-    async def unban(self, inter: Interaction, user: discord.User, reason: str = "No reason provided."):
+    async def unban(self, inter: Interaction, user: discord.Member, reason: str = "No reason provided."):
         await inter.response.defer()
         invoker = inter.user
 

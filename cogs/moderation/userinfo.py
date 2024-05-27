@@ -37,8 +37,8 @@ class UserInfo(commands.Cog):
                 "choomah_coins": 0,
                 "logs": [],
             })
-            embed.add_field(name="Choomah Coins", value="0", inline=False)
 
+            embed.add_field(name="Choomah Coins", value="0", inline=False)
             embed.add_field(name="Logs", value="No logs found for this user.", inline=False)
 
             await inter.followup.send(embed=embed, ephemeral=True)
@@ -52,6 +52,7 @@ class UserInfo(commands.Cog):
         if len(logs) == 0:
             embed.add_field(name="Choomah Coins", value="0", inline=False)
             embed.add_field(name="Logs", value="No logs found for this user.", inline=False)
+
             await inter.followup.send(embed=embed, ephemeral=True)
             return
 
@@ -62,6 +63,7 @@ class UserInfo(commands.Cog):
                     title=f"User Information for {member} ({member.id}) - Continued",
                     color=discord.Color.green()
                 )
+
                 fields = 0
 
             embed.add_field(
@@ -71,7 +73,6 @@ class UserInfo(commands.Cog):
             )
 
             fields += 1
-
 
         await inter.followup.send(embeds=embeds, ephemeral=True)
 

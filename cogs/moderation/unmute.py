@@ -26,7 +26,7 @@ class UnMute(commands.Cog):
             await inter.followup.send("This user is not muted!")
             return
 
-        await user.timeout(0)
+        await user.timeout(0)   # noqa  # 0 will untimeout the user
 
         await inter.followup.send(f"Unmuted {user}!")
 

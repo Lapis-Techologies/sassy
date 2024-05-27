@@ -22,16 +22,13 @@ class Kick(commands.Cog):
         if not invoker.get_role(self.bot.config['roles']['admin'].id):
             await inter.response.send_message("You do not have permission to use this command!")
             return
-
-        if user.get_role(self.bot.config['roles']['admin'].id):
+        elif user.get_role(self.bot.config['roles']['admin'].id):
             await inter.followup.send("You cannot kick an admin!", ephemeral=True)
             return
-
-        if user == invoker:
+        elif user == invoker:
             await inter.followup.send("You cannot kick yourself!", ephemeral=True)
             return
-
-        if user.id == self.bot.user.id:
+        elif user.id == self.bot.user.id:
             await inter.followup.send("hehe you can't kick me mate!", ephemeral=True)
             return
 
