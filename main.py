@@ -73,8 +73,12 @@ class Sassy(commands.Bot):
                 continue
 
             if item.is_dir():
+                if item.name.startswith("IGNORE_"):
+                    continue
                 await self._process_folder(item, f"{path_start}.{item.name}")
             elif item.is_file() and item.suffix == ".py":
+                if item.name.split('.')[0].startswith("IGNORE_"):
+                    continue
                 module = f"{path_start}.{item.stem}"
                 try:
                     await self.load_extension(module)

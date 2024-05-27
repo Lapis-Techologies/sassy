@@ -2,6 +2,7 @@ import discord
 from typing import TYPE_CHECKING
 from discord.ext import commands
 from discord import app_commands, Interaction
+from utils.IGNORE_adduser import add
 
 
 if TYPE_CHECKING:
@@ -77,11 +78,7 @@ class Mutes(commands.Cog):
         if curs is None:
             await inter.followup.send("No mutes found for this user.", ephemeral=True)
 
-            await self.bot.db.insert_one({
-                "uid": member.id,
-                "choomah_coins": 0,
-                "logs": []
-            })
+            await add(bot=self.bot, member=user, xp=0, level=0, choomah_coins=0, logs=None)
 
             return
 

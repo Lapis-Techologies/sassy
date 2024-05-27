@@ -2,6 +2,7 @@ import discord
 from typing import TYPE_CHECKING
 from discord.ext import commands
 from discord import app_commands, Interaction
+from utils.IGNORE_adduser import add as addd
 
 
 if TYPE_CHECKING:
@@ -26,11 +27,7 @@ class Add(commands.Cog):
         if curs is not None:
             message = "User already exists in the database!"
         else:
-            self.bot.db.insert_one({
-                "uid": user.id,
-                "choomah_coins": 0,
-                "logs": []
-            })
+            await addd(bot=self.bot, member=user, xp=0, level=0, choomah_coins=0, logs=None)
 
             message = "User added to the database!"
 

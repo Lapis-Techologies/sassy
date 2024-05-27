@@ -2,6 +2,7 @@ import discord
 from typing import TYPE_CHECKING
 from discord.ext import commands
 from discord import app_commands, Interaction
+from utils.IGNORE_adduser import add
 
 
 if TYPE_CHECKING:
@@ -82,11 +83,7 @@ class Warnings(commands.Cog):
         )
 
         if curs is None:
-            await self.bot.db.insert_one({
-                "uid": user.id,
-                "choomah_coins": 0,
-                "logs": []
-            })
+            await add(bot=self.bot, member=user, xp=0, level=0, choomah_coins=0, logs=None)
         else:
             for log in curs["logs"]:
                 if log["action"] == "warn":

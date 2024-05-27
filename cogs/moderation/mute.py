@@ -4,6 +4,7 @@ from uuid import uuid4
 from typing import TYPE_CHECKING
 from discord import app_commands, Interaction
 from discord.ext import commands
+from utils.IGNORE_adduser import add
 
 
 if TYPE_CHECKING:
@@ -53,17 +54,15 @@ class Mute(commands.Cog):
         curs = await self.bot.db.find_one({"uid": user.id}, projection={"logs": 1})
 
         if curs is None:
-            await self.bot.db.insert_one({
-                "uid": user.id,
-                "choomah_coins": 0,
-                "logs": [{
+            await add(bot=self.bot, member=user, xp=0, level=0, choomah_coins=0, logs=[
+                {
                     "case_id": case_id,
                     "action": "mute",
                     "reason": reason,
                     "moderator": invoker.id,
                     "timestamp": datetime.datetime.now(datetime.UTC)
-                }]
-            })
+                }
+            ])
         else:
             await self.bot.db.update_one({"uid": user.id}, {
                 "$push": {

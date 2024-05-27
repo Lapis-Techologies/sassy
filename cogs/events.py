@@ -3,6 +3,7 @@ from time import time
 from typing import TYPE_CHECKING
 from discord.ext import commands
 from discord import app_commands, Interaction
+from utils.IGNORE_adduser import add
 
 
 if TYPE_CHECKING:
@@ -40,11 +41,14 @@ class Events(commands.Cog):
     async def on_member_join(self, member: discord.Member):
         await self.bot.config["channels"]["welcome"].send(f"{member.mention} Whats goin on mate? You're druggo #{len(member.guild.members)}, fuckin skits mate")
 
-        await self.bot.db.insert_one({
-            "uid": member.id,
-            "choomah_coins": 0,
-            "logs": []
-        })
+        await add(bot=self.bot, member=member, xp=0, level=0,choomah_coins=0, logs=None)
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+
+
 
 
 async def setup(bot):

@@ -2,9 +2,12 @@ import random
 from discord.ext import commands
 from discord import app_commands, Interaction
 from typing import TYPE_CHECKING
+from utils.IGNORE_adduser import add
+
 
 if TYPE_CHECKING:
     from main import Sassy
+
 
 class Smoke(commands.Cog):
     def __init__(self, bot: "Sassy"):
@@ -18,11 +21,7 @@ class Smoke(commands.Cog):
         curs = await self.bot.db.find_one({"uid": user.id}, projection={"choomah_coins": 1})
 
         if curs is None:
-            await self.bot.db.insert_one({
-                "uid": user.id,
-                "choomah_coins": coins_found,
-                "logs": [],
-            })
+            await add(bot=self.bot, member=user, xp=0, level=0, choomah_coins=0, logs=None)
             message = f"You go smoking with Lez and the mates and find **{coins_found}** choomah coins!"
         else:
             current = curs["choomah_coins"]
@@ -31,6 +30,7 @@ class Smoke(commands.Cog):
             message = f"You go smoking with Lez and the mates and find **{coins_found}** choomah coins! Your new balance is ***{new_bal}***"
 
         await inter.response.send_message(message)
+
 
 async def setup(bot):
     await bot.add_cog(Smoke(bot))
