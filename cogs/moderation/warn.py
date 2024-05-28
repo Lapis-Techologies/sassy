@@ -4,7 +4,8 @@ from typing import TYPE_CHECKING
 from uuid import uuid4
 from discord.ext import commands
 from discord import app_commands, Interaction
-from utils.IGNORE_adduser import add
+from utils.adduser import add
+from utils.log import log
 
 
 if TYPE_CHECKING:
@@ -69,6 +70,8 @@ class Warn(commands.Cog):
             })
 
         await inter.followup.send(f"{user.mention} has been warned!", ephemeral=True)
+
+        await log(self.bot, inter, "warn", reason=reason, fields=[{"name": "Case ID", "value": f"`{case_id}`", "inline": False}])
 
 
 async def setup(bot: 'Sassy'):

@@ -20,7 +20,7 @@ class Leaderboard(commands.Cog):
             {"$project": {"choomah_coins": 1, "uid": 1}}
         ])
 
-        embed = Embed(title="Leaderboard", description="Top 10 Users", color=0x00FF00)
+        embed = Embed(title="Leaderboard - Choomah Coins", description="Top 10 Users - Choomah Coins", color=0x00FF00)
 
         i = 1
 
@@ -35,7 +35,28 @@ class Leaderboard(commands.Cog):
 
             i += 1
 
-        await inter.response.send_message(embed=embed)
+        curs = self.bot.db.aggregate([
+            {"$sort": {"level": -1}},
+            {"$limit": 10},
+            {"$project": {"level": 1, "uid": 1}}
+        ])
+
+        embed2 = Embed(title="Leaderboard - Levels", description="Top 10 Users - Levels")
+
+        i = 1
+
+        for entry in await curs.to_list(length=None):
+            user = self.bot.get_user(entry["uid"])
+            if user is None:
+                continue
+
+            level = entry["level"]
+
+            embed2.add_field(name=f"{i}. {user.name}", value=f"Level: ***{level}***", inline=False)
+
+            i += 1
+
+        await inter.response.send_message(embeds=[embed, embed2])
 
 
 async def setup(bot):

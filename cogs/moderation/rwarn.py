@@ -2,7 +2,7 @@ import discord
 from typing import TYPE_CHECKING
 from discord.ext import commands
 from discord import app_commands, Interaction
-from utils.IGNORE_adduser import add
+from utils.adduser import add
 
 
 if TYPE_CHECKING:
@@ -47,7 +47,8 @@ class RWarn(commands.Cog):
                         }
                     })
                     await inter.followup.send("Warning removed!", ephemeral=True)
-                    break
+
+        await log(self.bot, inter, "rwarn", fields=[{"name": "Case ID", "value": f"`{case_id}`", "inline": False}])
 
 
 async def setup(bot: 'Sassy'):

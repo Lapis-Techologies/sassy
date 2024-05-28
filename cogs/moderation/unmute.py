@@ -2,6 +2,7 @@ import discord
 from typing import TYPE_CHECKING
 from discord.ext import commands
 from discord import app_commands, Interaction
+from utils.log import log
 
 
 if TYPE_CHECKING:
@@ -29,6 +30,8 @@ class UnMute(commands.Cog):
         await user.timeout(0)   # noqa  # 0 will untimeout the user
 
         await inter.followup.send(f"Unmuted {user}!")
+
+        await log(self.bot, inter, "unmute")
 
 
 async def setup(bot):

@@ -1,4 +1,4 @@
-async def add(bot, member, choomah_coins=0, xp=0, level=0, logs=None):
+async def add(bot, member, choomah_coins=0, xp=0, level=0, last_message=0, logs=None):
     """
     helper function to add a member into the database
     """
@@ -10,5 +10,6 @@ async def add(bot, member, choomah_coins=0, xp=0, level=0, logs=None):
         "choomah_coins": choomah_coins,
         "xp": xp,
         "level": level,
-        "logs": logs
+        "logs": logs,
+        "last_message": last_message
     })

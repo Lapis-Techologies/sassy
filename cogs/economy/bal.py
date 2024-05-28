@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from discord import app_commands, Interaction
 from discord.ext import commands
-from utils.IGNORE_adduser import add
+from utils.adduser import add
 
 
 if TYPE_CHECKING:

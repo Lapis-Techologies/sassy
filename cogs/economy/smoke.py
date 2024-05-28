@@ -2,7 +2,7 @@ import random
 from discord.ext import commands
 from discord import app_commands, Interaction
 from typing import TYPE_CHECKING
-from utils.IGNORE_adduser import add
+from utils.adduser import add
 
 
 if TYPE_CHECKING:

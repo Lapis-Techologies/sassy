@@ -2,7 +2,8 @@ import discord
 from typing import TYPE_CHECKING
 from discord.ext import commands
 from discord import app_commands, Interaction
-from utils.IGNORE_adduser import add
+from utils.adduser import add
+from utils.log import log
 
 
 if TYPE_CHECKING:
@@ -38,6 +39,8 @@ class UnBan(commands.Cog):
 
         if curs is None:
             await add(bot=self.bot, member=user)
+
+        await log(self.bot, inter, "unban", reason)
 
 
 async def setup(bot: 'Sassy'):

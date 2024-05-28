@@ -1,9 +1,11 @@
 import discord
 from time import time
+from random import randint
 from typing import TYPE_CHECKING
 from discord.ext import commands
-from discord import app_commands, Interaction
-from utils.IGNORE_adduser import add
+from discord import app_commands, Interaction, Embed
+from utils.adduser import add
+from utils.log import log
 
 
 if TYPE_CHECKING:
@@ -41,14 +43,82 @@ class Events(commands.Cog):
     async def on_member_join(self, member: discord.Member):
         await self.bot.config["channels"]["welcome"].send(f"{member.mention} Whats goin on mate? You're druggo #{len(member.guild.members)}, fuckin skits mate")
 
-        await add(bot=self.bot, member=member, xp=0, level=0,choomah_coins=0, logs=None)
+        await add(bot=self.bot, member=member)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
 
+        curs = await self.bot.db.find_one({"uid": message.author.id}, projection={"xp": 1, "level": 1, "last_message": 1})
 
+        if curs is None:
+            await add(self.bot, message.author)
+
+        last_message = curs["last_message"]
+
+        if time() > last_message:
+            last_message = time() + 8   # +8 seconds
+        else:
+            return
+
+        xp = curs["xp"]
+        xp += randint(5, 12)
+
+        level = curs["level"]
+        xp_needed = 100 + (level - 1) * 50
+
+        if xp >= xp_needed:
+            level += 1
+            xp -= xp_needed
+            xp_needed = 100 + (level - 1) * 50
+
+            progress = min(10, int(1 + (xp * 10) / xp_needed))
+
+            bar = "ERROR CALCULATING PROGRESS"
+            if progress == 10:
+                bar = "🟩" * 10
+            elif progress == 9:
+                bar = "🟩" * 9 + "🟨"
+            elif progress <= 8:
+                bar = "🟩" * progress + "🟨" + "🟥" * ((10 - progress) - 1)
+
+            embed = Embed(title="Level Up!", description=f"Holy shit mate you leveled up to level **{level}**",
+                          color=0x00FF00)
+
+            embed.add_field(name="XP Progress", value=f"**{xp}** > {bar} < **{xp_needed}**")
+
+            await message.channel.send(f"{message.author.mention}", embed=embed)
+
+        await self.bot.db.update_one({"uid": message.author.id}, {
+            "$set": {
+                "xp": xp,
+                "level": level,
+                "last_message": last_message
+            }
+        })
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, before: discord.Message, after: discord.Message):
+        if before.author.bot:
+            return
+
+        await log(self.bot, None, "edit", fields=[
+            {"name": "User", "value": f"{before.author.mention} (`{before.author.id}`)", "inline": False},
+            {"name": "Before", "value": f"```{before.content}```", "inline": False},
+            {"name": "After", "value": f"```{after.content}```", "inline": False},
+            {"name": "Jump Link", "value": after.jump_url, "inline": False}
+        ])
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, message: discord.Message):
+        if message.author.bot:
+            return
+
+        await log(self.bot, None, "delete", fields=[
+            {"name": "User", "value": f"{message.author.mention} (`{message.author.id}`)", "inline": False},
+            {"name": "Content", "value": f"```{message.content}```", "inline": False},
+        ])
 
 
 async def setup(bot):

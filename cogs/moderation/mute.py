@@ -4,7 +4,8 @@ from uuid import uuid4
 from typing import TYPE_CHECKING
 from discord import app_commands, Interaction
 from discord.ext import commands
-from utils.IGNORE_adduser import add
+from utils.adduser import add
+from utils.log import log
 
 
 if TYPE_CHECKING:
@@ -75,6 +76,11 @@ class Mute(commands.Cog):
                     }
                 }
             })
+
+        await log(self.bot, inter, "mute", reason, [
+            {"name": "Time", "value": f"{days} Days, {hours} Hours, {minutes} Minutes", "inline": False},
+            {"name": "Case ID", "value": f"`{case_id}`", "inline": False}
+        ])
 
 
 async def setup(bot: "Sassy"):

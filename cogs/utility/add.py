@@ -2,7 +2,8 @@ import discord
 from typing import TYPE_CHECKING
 from discord.ext import commands
 from discord import app_commands, Interaction
-from utils.IGNORE_adduser import add as addd
+from utils.adduser import add as addd
+from utils.log import log
 
 
 if TYPE_CHECKING:
@@ -32,6 +33,11 @@ class Add(commands.Cog):
             message = "User added to the database!"
 
         await inter.followup.send(message, ephemeral=True)
+
+        await log(self.bot, inter, "Database Add", fields=[
+            {"name": f"Moderator", "value": f"{invoker.mention} (`{invoker.id}`)", "inline": False},
+            {"name": f"Member", "value": f"{user.mention} (`{user.id}`)", "inline": False}
+        ])
 
 
 async def setup(bot: 'Sassy'):
