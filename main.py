@@ -16,6 +16,8 @@ class Sassy(commands.Bot):
         self.config = config
         self.db: AsyncIOMotorDatabase = db
         self.remove_command("help")
+        self.version = "1.6"  # TODO: Add Bot Debug Command
+        # TODO: Add load, unload, and refresh command
 
     async def on_ready(self):
         await self.process_config(self.config)
