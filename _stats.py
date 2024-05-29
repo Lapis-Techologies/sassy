@@ -35,7 +35,9 @@ class ProjectReader:
         self.failed = failed
         self.size = size
 
-        return f"{'-' * 50}\nReading files in '{self.path}':\nTotal lines: {lines} (~{lines//(files - failed)} lines per file)\nTotal files: {files} (Failed {failed} files)\nTotal directories: {self.directories}\nTotal files read: {files - failed}\nTotal size: {self._format_size()}\n{'-' * 50}"
+        feet, miles = self._get_length(self.lines)
+
+        return f"{'-' * 50}\nReading files in '{self.path}':\nTotal lines: {lines} (~{lines//(files - failed)} lines per file)\nTotal files: {files} (Failed {failed} files)\nTotal directories: {self.directories}\nTotal files read: {files - failed}\nTotal size: {self._format_size()}\nLength: {feet}ft ({miles} Miles){'-' * 50}"
 
     def _format_size(self) -> str:
         """
@@ -48,6 +50,14 @@ class ProjectReader:
             f"{self.size / self._mb:.2f} MB" if self.size < self._gb else
             f"{self.size / self._gb:.2f} GB"
         )
+
+    @staticmethod
+    def _get_length(length, roundd: bool = True):
+        total_length_inches = length / 0.15  # 0.15 Inches
+        total_length_feet = total_length_inches / 12  # 12 Inches in foot
+        total_length_mile = total_length_feet / 5280  # 5280 Feet in mile
+
+        return total_length_feet, round(total_length_mile, 2) if roundd else total_length_mile
 
     def _process_project(self) -> tuple[int, int, int, float]:
         """
