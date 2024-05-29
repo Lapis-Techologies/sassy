@@ -62,8 +62,6 @@ class Sassy(commands.Bot):
         for channel in guild_channels:
             self.config["channels"][channel] = self.config["guild"].get_channel(guild_channels[channel])
 
-        print(f"DEBUG: {str(self.config).replace("'", '"')}")
-
     async def load_cogs(self):
         if not os.path.exists("./cogs"):
             raise OSError("You need a cogs folder!")
