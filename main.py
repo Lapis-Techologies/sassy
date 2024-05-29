@@ -26,14 +26,18 @@ class Sassy(commands.Bot):
 
     async def process_config(self, config: json):
         guild = config.get("guild")
+        xp = config.get("xp")
         self.config = {}
 
         if guild is None:
             raise KeyError("You need to provide a guild in the config.json file!")
+        elif xp is None:
+            raise KeyError("You need to provide an xp field in the config.json file!")
 
         guild_id = guild.get("id")
         guild_roles = guild.get("roles")
         guild_channels = guild.get("channels")
+        rewards = xp["rewards"]
 
         if guild_id is None:
             raise KeyError("You need to provide a guild id in the config.json file!")
@@ -41,16 +45,24 @@ class Sassy(commands.Bot):
             raise KeyError("You need to provide guild roles in the config.json file!")
         elif guild_channels is None:
             raise KeyError("You need to provide guild channels in the config.json file!")
+        elif rewards is None:
+            raise KeyError("You need to provide xp rewards in the config.json file!")
 
         self.config["guild"] = self.get_guild(guild_id)
         self.config["channels"] = {}
         self.config["roles"] = {}
+        self.config["xp"] = {"rewards": {}}
+
+        for level, reward in rewards.items():
+            self.config["xp"]["rewards"][level] = self.config["guild"].get_role(reward)
 
         for role in guild_roles:
             self.config["roles"][role] = self.config["guild"].get_role(guild_roles[role])
 
         for channel in guild_channels:
             self.config["channels"][channel] = self.config["guild"].get_channel(guild_channels[channel])
+
+        print(f"DEBUG: {str(self.config).replace("'", '"')}")
 
     async def load_cogs(self):
         if not os.path.exists("./cogs"):

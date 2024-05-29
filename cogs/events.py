@@ -90,6 +90,11 @@ class Events(commands.Cog):
 
             await message.channel.send(f"{message.author.mention}", embed=embed)
 
+            for lvl, reward in self.bot.config["xp"]["rewards"].items():
+                if level == int(lvl):
+                    # User has earned a new reward!
+                    await message.author.add_roles(reward)
+
         await self.bot.db.update_one({"uid": message.author.id}, {
             "$set": {
                 "xp": xp,
