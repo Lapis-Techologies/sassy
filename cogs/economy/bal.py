@@ -17,12 +17,10 @@ class Bal(commands.Cog):
     async def bal(self, inter: Interaction):
         user = inter.user
 
-        curs = await self.bot.db.find_one({"uid": user.id}, projection={"choomah_coins": 1})
+        curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"choomah_coins": 1})
 
         if curs is None:
             await add(bot=self.bot, member=user)
-
-            # await inter.response.send_message("You have **0** choomah coins!")
             message = "You have **0** choomah coins!"
         else:
             balance = curs["choomah_coins"]

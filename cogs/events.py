@@ -50,7 +50,7 @@ class Events(commands.Cog):
         if message.author.bot:
             return
 
-        curs = await self.bot.db.find_one({"uid": message.author.id}, projection={"xp": 1, "level": 1, "last_message": 1})
+        curs = await self.bot.user_db.find_one({"uid": message.author.id}, projection={"xp": 1, "level": 1, "last_message": 1})
 
         if curs is None:
             await add(self.bot, message.author)
@@ -66,12 +66,12 @@ class Events(commands.Cog):
         xp += randint(5, 12)
 
         level = curs["level"]
-        xp_needed = 100 + (level - 1) * 50
+        xp_needed = (100 + (level - 1) * 50) * 2
 
         if xp >= xp_needed:
             level += 1
             xp -= xp_needed
-            xp_needed = 100 + (level - 1) * 50
+            xp_needed = (100 + (level - 1) * 50) * 2
 
             progress = min(10, int(1 + (xp * 10) / xp_needed))
 
@@ -95,7 +95,7 @@ class Events(commands.Cog):
                     # User has earned a new reward!
                     await message.author.add_roles(reward)
 
-        await self.bot.db.update_one({"uid": message.author.id}, {
+        await self.bot.user_db.update_one({"uid": message.author.id}, {
             "$set": {
                 "xp": xp,
                 "level": level,

@@ -30,7 +30,7 @@ class UserInfo(commands.Cog):
 
         embed.set_thumbnail(url=member.avatar.url)
 
-        curs = await self.bot.db.find_one({"uid": member.id}, projection={"logs": 1})
+        curs = await self.bot.user_db.find_one({"uid": member.id}, projection={"logs": 1})
 
         if curs is None:
             await add(bot=self.bot, member=user)

@@ -8,7 +8,8 @@
     "channels": {
       "welcome": ,
       "posts": ,
-      "logs":
+      "logs": ,
+      "drops":
     }
   },
   "xp": {

@@ -23,7 +23,7 @@ class Add(commands.Cog):
             await inter.response.send_message("You do not have permission to use this command!")
             return
 
-        curs = await self.bot.db.find_one({"uid": user.id}, projection={"uid": 1})
+        curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"uid": 1})
 
         if curs is not None:
             message = "User already exists in the database!"

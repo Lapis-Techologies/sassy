@@ -4,17 +4,18 @@ import json
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from motor.motor_asyncio import AsyncIOMotorClient
 
 
 class Sassy(commands.Bot):
     """
     Sassy the Sasquatch discord bot!!!!
     """
-    def __init__(self, config: json, db, *args, **kwargs):
+    def __init__(self, config: json, user_db, economy_db, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.config = config
-        self.db: AsyncIOMotorDatabase = db
+        self.user_db = user_db
+        self.economy_db = economy_db
         self.remove_command("help")
         self.version = "1.6"  # TODO: Add Bot Debug Command
         # TODO: Add load, unload, and refresh command
@@ -109,12 +110,15 @@ def main() -> None:
 
     is_dev = os.getenv("DEV")
     branch = "dev" if is_dev else "prod"
+    mongo = os.getenv("mongo")
 
-    mongo = AsyncIOMotorClient(os.getenv("mongo"))
-    db = mongo[os.getenv("db")]
-    collection = db[branch]
+    mongo = AsyncIOMotorClient(mongo)
+    collection_name = os.getenv("db") + f"-{branch}"
+    db = mongo[collection_name]
+    user_db = db["user"]
+    economy_db = db["economy"]
 
-    bot = Sassy(command_prefix=config["prefix"], intents=intents, config=config, db=collection)
+    bot = Sassy(command_prefix=config["prefix"], intents=intents, config=config, user_db=user_db, economy_db=economy_db)
     bot.run(os.getenv("TOKEN"))
 
 

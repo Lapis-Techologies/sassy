@@ -40,24 +40,26 @@ class Stats(commands.Cog):
     @commands.is_owner()
     @app_commands.command(name="testxp")
     async def testxp(self, inter: Interaction, xp: int, level: int):
-        xp_needed = int((4*(level**3))/5)
-        if xp_needed == 0:
-            xp_needed = 1
-        progress = int(((xp - 0) / (xp_needed - 0)) * (10 - 1) + 1)
+        # xp_needed = int((4*(level**3))/5)
+        # if xp_needed == 0:
+        #     xp_needed = 1
+        # progress = int(((xp - 0) / (xp_needed - 0)) * (10 - 1) + 1)
+        #
+        # bar = None
+        # if progress == 10:
+        #     bar = "🟩" * 10
+        # elif progress == 9:
+        #     bar = "🟩" * 9 + "🟨"
+        # elif progress <= 8:
+        #     bar = "🟩" * progress + "🟨" + "🟥" * ((10 - progress) - 1)
+        #
+        # embed = Embed(title="Level Up!", description=f"Holy shit mate you leveled up to level **{level}**", color=0x00FF00)
+        #
+        # embed.add_field(name="XP Progress", value=f"**{xp}** > {bar} < **{xp_needed}**")
+        #
+        # await inter.response.send_message(f"```{xp_needed=}\n{progress=}```", embed=embed)
 
-        bar = None
-        if progress == 10:
-            bar = "🟩" * 10
-        elif progress == 9:
-            bar = "🟩" * 9 + "🟨"
-        elif progress <= 8:
-            bar = "🟩" * progress + "🟨" + "🟥" * ((10 - progress) - 1)
-
-        embed = Embed(title="Level Up!", description=f"Holy shit mate you leveled up to level **{level}**", color=0x00FF00)
-
-        embed.add_field(name="XP Progress", value=f"**{xp}** > {bar} < **{xp_needed}**")
-
-        await inter.response.send_message(f"```{xp_needed=}\n{progress=}```", embed=embed)
+        await inter.response.send_message(f"***COMMAND OUTDATED, OWNER PLEASE UPDATE ME***")
 
 
 async def setup(bot: "Sassy"):

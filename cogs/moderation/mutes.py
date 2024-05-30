@@ -26,7 +26,7 @@ class Mutes(commands.Cog):
         curs = None
 
         if case_id is not None:
-            curs = await self.bot.db.find_one({"uid": member.id}, projection={"logs": 1})
+            curs = await self.bot.user_db.find_one({"uid": member.id}, projection={"logs": 1})
 
         if curs is None:
             await inter.followup.send("No mutes found for this user.", ephemeral=True)
@@ -73,7 +73,7 @@ class Mutes(commands.Cog):
             await inter.followup.send("No mutes found for this user.", ephemeral=True)
             return
 
-        curs = await self.bot.db.find_one({"uid": member.id}, projection={"logs": 1})
+        curs = await self.bot.user_db.find_one({"uid": member.id}, projection={"logs": 1})
 
         if curs is None:
             await inter.followup.send("No mutes found for this user.", ephemeral=True)

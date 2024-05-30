@@ -31,7 +31,7 @@ class RWarn(commands.Cog):
         if user.id == self.bot.user.id:
             return
 
-        curs = await self.bot.db.find_one({"uid": user.id}, projection={"logs": 1})
+        curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"logs": 1})
 
         if curs is None:
             await add(bot=self.bot, member=user)
@@ -39,7 +39,7 @@ class RWarn(commands.Cog):
         else:
             for log in curs["logs"]:
                 if log["case_id"] == case_id:
-                    await self.bot.db.update_one({"uid": user.id}, {    # Remove the case
+                    await self.bot.user_db.update_one({"uid": user.id}, {    # Remove the case
                         "$pull": {
                             "logs": {
                                 "case_id": case_id

@@ -14,7 +14,7 @@ class Leaderboard(commands.Cog):
     @app_commands.command(name="leaderboard", description="Shows the top leaderboard for who has the most choomah coins")
     @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
     async def leaderboard(self, inter: Interaction):
-        curs = self.bot.db.aggregate([
+        curs = self.bot.user_db.aggregate([
             {"$sort": {"choomah_coins": -1}},
             {"$limit": 10},
             {"$project": {"choomah_coins": 1, "uid": 1}}
@@ -35,7 +35,7 @@ class Leaderboard(commands.Cog):
 
             i += 1
 
-        curs = self.bot.db.aggregate([
+        curs = self.bot.user_db.aggregate([
             {"$sort": {"level": -1}},
             {"$limit": 10},
             {"$project": {"level": 1, "uid": 1}}

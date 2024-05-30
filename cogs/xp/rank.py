@@ -17,7 +17,7 @@ class Rank(commands.Cog):
         if member is None:
             member = inter.user
 
-        curs = await self.bot.db.find_one({"uid": member.id}, projection={"xp": 1, "level": 1})
+        curs = await self.bot.user_db.find_one({"uid": member.id}, projection={"xp": 1, "level": 1})
 
         if curs is None:
             await add(bot=self.bot, member=member)
