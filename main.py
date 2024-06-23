@@ -3,20 +3,21 @@ import pathlib
 import json
 import discord
 from discord.ext import commands
-from dotenv import load_dotenv
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from motor.motor_asyncio import AsyncIOMotorClient
 
 
 class Sassy(commands.Bot):
     """
     Sassy the Sasquatch discord bot!!!!
     """
-    def __init__(self, config: json, db, *args, **kwargs):
+    def __init__(self, config: dict, user_db, economy_db, starboard_db,  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.config = config
-        self.db: AsyncIOMotorDatabase = db
+        self.user_db = user_db
+        self.economy_db = economy_db
+        self.starboard_db = starboard_db
         self.remove_command("help")
-        self.version = "1.6"  # TODO: Add Bot Debug Command
+        self.version = "1.6.3"
         # TODO: Add load, unload, and refresh command
 
     async def on_ready(self):
@@ -26,7 +27,7 @@ class Sassy(commands.Bot):
         synced = len(await self.tree.sync())
         print(f"Synced {synced} commands!")
 
-    async def process_config(self, config: json):
+    async def process_config(self, config: dict):
         guild = config.get("guild")
         xp = config.get("xp")
         self.config = {}
@@ -87,10 +88,12 @@ class Sassy(commands.Bot):
             if item.is_dir():
                 if item.name.startswith("IGNORE_"):
                     continue
+
                 await self._process_folder(item, f"{path_start}.{item.name}")
             elif item.is_file() and item.suffix == ".py":
-                if item.name.split('.')[0].startswith("IGNORE_"):
+                if item.name.startswith("IGNORE_"):
                     continue
+                
                 module = f"{path_start}.{item.stem}"
                 try:
                     await self.load_extension(module)
@@ -99,23 +102,50 @@ class Sassy(commands.Bot):
                     print(f"Failed to load {module} with error: {e}")
 
 
-def main() -> None:
-    load_dotenv()
-
+def load_config():
     with open("config.json", "r") as f:
         config = json.load(f)
 
     intents = discord.Intents.all()
 
-    is_dev = os.getenv("DEV")
+    is_dev = config["database"]["dev"]
     branch = "dev" if is_dev else "prod"
+    url = config["database"]["url"]
 
-    mongo = AsyncIOMotorClient(os.getenv("mongo"))
-    db = mongo[os.getenv("db")]
-    collection = db[branch]
+    mongo = AsyncIOMotorClient(url)
+    collection_name = config["database"]["name"] + f"-{branch}"
+    db = mongo[collection_name]
+    user_db = db["user"]
+    economy_db = db["economy"]
+    starboard_db = db["starboard"]
 
-    bot = Sassy(command_prefix=config["prefix"], intents=intents, config=config, db=collection)
-    bot.run(os.getenv("TOKEN"))
+    token = config["bot"]["token"]
+
+    return {
+        "token": token,
+        "user_db": user_db,
+        "economy_db": economy_db,
+        "starboard_db": starboard_db,
+        "config": config,
+        "intents": intents,
+        "prefix": config["bot"]["prefix"]
+    }
+
+def main() -> None:
+
+    config = load_config()
+
+    TOKEN = config["token"]
+    
+    prefix = config["prefix"]
+    user_db = config["user_db"]
+    economy_db = config["economy_db"]
+    starboard_db = config["starboard_db"]
+    intents = config["intents"]
+    config = config["config"]
+
+    bot = Sassy(command_prefix=prefix, intents=intents, config=config, user_db=user_db, economy_db=economy_db, starboard_db=starboard_db)
+    bot.run(TOKEN)
 
 
 if __name__ == '__main__':

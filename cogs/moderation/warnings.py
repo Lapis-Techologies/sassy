@@ -24,7 +24,7 @@ class Warnings(commands.Cog):
             return
 
         if case_id is not None:
-            curs = await self.bot.db.find_one({"uid": user.id}, projection={"logs": 1})
+            curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"logs": 1})
             found = False
 
             if curs is None:
@@ -73,7 +73,7 @@ class Warnings(commands.Cog):
                 await inter.followup.send("No warning found with that case ID.", ephemeral=True)
                 return
 
-        curs = await self.bot.db.find_one({"uid": user.id}, projection={"logs": 1})
+        curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"logs": 1})
 
         count = 0
 

@@ -28,16 +28,18 @@ class ProjectReader:
         Print the project statistics.
         :return: None
         """
-        lines, files, failed, size = self._process_project()
+        lines, files, failed, size, name, length = self._process_project()
 
         self.lines = lines
         self.files = files
         self.failed = failed
         self.size = size
+        self.lname = name
+        self.llength = length
 
         feet, miles = self._get_length(self.lines)
 
-        return f"{'-' * 50}\nReading files in '{self.path}':\nTotal lines: {lines} (~{lines//(files - failed)} lines per file)\nTotal files: {files} (Failed {failed} files)\nTotal directories: {self.directories}\nTotal files read: {files - failed}\nTotal size: {self._format_size()}\nLength: {feet}ft ({miles} Miles){'-' * 50}"
+        return f"{'-' * 50}\nReading files in '{self.path}':\nTotal lines: {lines} (~{lines//(files - failed)} lines per file)\nTotal files: {files} (Failed {failed} files)\nTotal directories: {self.directories}\nTotal files read: {files - failed}\nTotal size: {self._format_size()}\nLongest File: {self.lname} ({self.llength} lines)\nLength: {feet}ft ({miles} Miles){'-' * 50}"
 
     def _format_size(self) -> str:
         """
@@ -52,14 +54,14 @@ class ProjectReader:
         )
 
     @staticmethod
-    def _get_length(length, roundd: bool = True):
-        total_length_inches = length / 0.15  # 0.15 Inches
-        total_length_feet = total_length_inches / 12  # 12 Inches in foot
+    def _get_length(length):
+        total_length_inches = length // 0.15  # 0.15 Inches
+        total_length_feet = total_length_inches // 12  # 12 Inches in foot
         total_length_mile = total_length_feet / 5280  # 5280 Feet in mile
 
-        return total_length_feet, round(total_length_mile, 2) if roundd else total_length_mile
+        return total_length_feet, round(total_length_mile, 2)
 
-    def _process_project(self) -> tuple[int, int, int, float]:
+    def _process_project(self) -> tuple[int, int, int, float, str, int]:
         """
         Process the project files.
         :return: None
@@ -69,16 +71,18 @@ class ProjectReader:
 
         return self._process_folder(self.path)
 
-    def _process_folder(self, folder: pathlib.Path) -> tuple[int, int, int, float]:
+    def _process_folder(self, folder: pathlib.Path) -> tuple[int, int, int, float, str, int]:
         """
         Process a folder.
         :param folder: pathlib.Path
-        :return: None
+        :return: tuple containing total lines, total files, total failed files, total size, largest file name, largest file line count
         """
         lines = 0
         files = 0
         failed = 0
         size = 0
+        largest_file_name = ""
+        largest_file_lines = 0
 
         try:
             for item in folder.iterdir():
@@ -86,17 +90,26 @@ class ProjectReader:
                     continue
                 elif item.is_dir():
                     self.directories += 1
-                    l, f, e, s = self._process_folder(item)
+                    l, f, e, s, lf_name, lf_lines = self._process_folder(item)
                     lines += l
                     files += f
                     failed += e
                     size += s
+                    # Check if the largest file in the subfolder is larger than the current largest
+                    if lf_lines > largest_file_lines:
+                        largest_file_name = lf_name
+                        largest_file_lines = lf_lines
                 elif item.is_file():
                     try:
                         with open(item, 'r') as f:
+                            file_lines = len(f.readlines())
                             files += 1
-                            lines += len(f.readlines())
+                            lines += file_lines
                             size += item.stat().st_size
+                            # Check if this file is the largest one so far
+                            if file_lines > largest_file_lines:
+                                largest_file_name = item.name
+                                largest_file_lines = file_lines
                     except Exception:   # noqa
                         failed += 1
                 else:
@@ -104,7 +117,7 @@ class ProjectReader:
         except PermissionError:
             pass
 
-        return lines, files, failed, size
+        return lines, files, failed, size, largest_file_name, largest_file_lines
 
 
 # https://stackoverflow.com/questions/552744/how-do-i-profile-memory-usage-in-python

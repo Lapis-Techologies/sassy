@@ -1,19 +1,26 @@
 {
-  "prefix": "?",
-  "guild": {
-    "id": ,
-    "roles": {
-      "admin":
+    "database": {
+        "dev": ,
+        "url": "",
+        "name": ""
     },
-    "channels": {
-      "welcome": ,
-      "posts": ,
-      "logs":
-    }
-  },
-  "xp": {
-    "rewards": {
-      "123": 123
+    "bot": {
+        "token": "",
+        "prefix": ""
+    },
+    "guild": {
+      "id": ,
+      "roles": {
+        "admin":
+      },
+      "channels": {
+        "welcome": ,
+        "logs": ,
+        "drops":
+      }
+    },
+    "xp": {
+      "rewards": {
+      }
     }
   }
-}

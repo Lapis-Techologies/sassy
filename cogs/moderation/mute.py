@@ -52,7 +52,7 @@ class Mute(commands.Cog):
 
         case_id = str(uuid4())
 
-        curs = await self.bot.db.find_one({"uid": user.id}, projection={"logs": 1})
+        curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"logs": 1})
 
         if curs is None:
             await add(bot=self.bot, member=user, logs=[
@@ -65,7 +65,7 @@ class Mute(commands.Cog):
                 }
             ])
         else:
-            await self.bot.db.update_one({"uid": user.id}, {
+            await self.bot.user_db.update_one({"uid": user.id}, {
                 "$push": {
                     "logs": {
                         "case_id": case_id,

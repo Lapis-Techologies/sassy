@@ -20,7 +20,7 @@ class Hunt(commands.Cog):
         
         user = inter.user
 
-        curs = await self.bot.db.find_one({"uid": user.id}, projection={"choomah_coins": 1})
+        curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"choomah_coins": 1})
         
         dice = random.randint(0, 2)
 
@@ -39,12 +39,12 @@ class Hunt(commands.Cog):
 
         if curs is None:
             new_bal = offset if offset >= 0 else 0
-            await add(bot=self.bot, member=user, choomah_coins=new_bal, logs=None)
+            await add(self.bot, user, choomah_coins=new_bal)
         else:
             new_bal = curs["choomah_coins"] + offset
             new_bal = new_bal if new_bal >= 0 else 0
 
-            await self.bot.db.update_one({"uid": user.id}, {
+            await self.bot.user_db.update_one({"uid": user.id}, {
                 "$set": {
                     "choomah_coins": new_bal
                 }
