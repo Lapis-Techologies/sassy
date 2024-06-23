@@ -1,0 +1,33 @@
+from typing import TYPE_CHECKING
+from json import load
+from discord import Embed, app_commands, Interaction
+from discord.ext import commands
+
+
+if TYPE_CHECKING:
+    from main import Sassy
+
+
+class Rules(commands.Cog):
+    def __init__(self, bot: "Sassy"):
+        self.bot = bot
+
+    @app_commands.command(name="rules", description="Post the rules")
+    @app_commands.checks.cooldown(1, 40, key=lambda i: (i.guild_id, i.user.id))
+    async def ping(self, inter: Interaction):
+        with open("rules.json", "r") as f:
+            rules: list[dict[str, str]] = load(f)
+        
+        embed = Embed(title="Rules", color=0x17FF77)
+        embed.set_thumbnail(url="https://static.tvtropes.org/pmwiki/pub/images/lez_6011.png")
+
+        for i, entry in enumerate(rules):
+            rule = next(iter(entry))
+            details = entry[rule]
+            embed.add_field(name=f"{i+1}. {rule}", value=details, inline=False)
+        
+        await inter.response.send_message(embed=embed)
+
+
+async def setup(bot: 'Sassy'):
+    await bot.add_cog(Rules(bot))

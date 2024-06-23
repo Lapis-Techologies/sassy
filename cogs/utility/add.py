@@ -30,14 +30,15 @@ class Add(commands.Cog):
         else:
             await addd(bot=self.bot, member=user, logs=None)
 
+            await log(self.bot, inter, "Database Add", fields=[
+                {"name": f"Moderator", "value": f"{invoker.mention} (`{invoker.id}`)", "inline": False},
+                {"name": f"Member", "value": f"{user.mention} (`{user.id}`)", "inline": False}
+            ])
+
             message = "User added to the database!"
 
         await inter.followup.send(message, ephemeral=True)
 
-        await log(self.bot, inter, "Database Add", fields=[
-            {"name": f"Moderator", "value": f"{invoker.mention} (`{invoker.id}`)", "inline": False},
-            {"name": f"Member", "value": f"{user.mention} (`{user.id}`)", "inline": False}
-        ])
 
 
 async def setup(bot: 'Sassy'):

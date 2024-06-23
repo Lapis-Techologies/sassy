@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING
-from discord import Embed, app_commands, Interaction, Member
+from discord import Embed, app_commands, Interaction, User, Member
 from discord.ext import commands
 from utils.adduser import add
 
@@ -13,7 +13,7 @@ class Rank(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="rank", description="Check the your or another user's level")
-    async def level(self, inter: Interaction, member: Member = None):
+    async def level(self, inter: Interaction, member: Member | User | None = None):
         if member is None:
             member = inter.user
 

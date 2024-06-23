@@ -10,13 +10,14 @@ class Sassy(commands.Bot):
     """
     Sassy the Sasquatch discord bot!!!!
     """
-    def __init__(self, config: dict, user_db, economy_db, *args, **kwargs):
+    def __init__(self, config: dict, user_db, economy_db, starboard_db,  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.config = config
         self.user_db = user_db
         self.economy_db = economy_db
+        self.starboard_db = starboard_db
         self.remove_command("help")
-        self.version = "1.6.1"  # TODO: Add Bot Debug Command
+        self.version = "1.6.2"
         # TODO: Add load, unload, and refresh command
 
     async def on_ready(self):
@@ -87,10 +88,12 @@ class Sassy(commands.Bot):
             if item.is_dir():
                 if item.name.startswith("IGNORE_"):
                     continue
+
                 await self._process_folder(item, f"{path_start}.{item.name}")
             elif item.is_file() and item.suffix == ".py":
-                if item.name.split('.')[0].startswith("IGNORE_"):
+                if item.name.startswith("IGNORE_"):
                     continue
+                
                 module = f"{path_start}.{item.stem}"
                 try:
                     await self.load_extension(module)
@@ -114,6 +117,7 @@ def load_config():
     db = mongo[collection_name]
     user_db = db["user"]
     economy_db = db["economy"]
+    starboard_db = db["starboard"]
 
     token = config["bot"]["token"]
 
@@ -121,6 +125,7 @@ def load_config():
         "token": token,
         "user_db": user_db,
         "economy_db": economy_db,
+        "starboard_db": starboard_db,
         "config": config,
         "intents": intents,
         "prefix": config["bot"]["prefix"]
@@ -135,10 +140,11 @@ def main() -> None:
     prefix = config["prefix"]
     user_db = config["user_db"]
     economy_db = config["economy_db"]
+    starboard_db = config["starboard_db"]
     intents = config["intents"]
-    config = config["config"]   # Bad naming if im being honest
+    config = config["config"]
 
-    bot = Sassy(command_prefix=prefix, intents=intents, config=config, user_db=user_db, economy_db=economy_db)
+    bot = Sassy(command_prefix=prefix, intents=intents, config=config, user_db=user_db, economy_db=economy_db, starboard_db=starboard_db)
     bot.run(TOKEN)
 
 
