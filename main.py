@@ -17,7 +17,7 @@ class Sassy(commands.Bot):
         self.economy_db = economy_db
         self.starboard_db = starboard_db
         self.remove_command("help")
-        self.version = "1.6.2"
+        self.version = "1.6.3"
         # TODO: Add load, unload, and refresh command
 
     async def on_ready(self):
