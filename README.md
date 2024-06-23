@@ -40,19 +40,19 @@ Sassy the Discord bot is a general purpose bot themed around for the server [Sas
 # Setup
 
 ### Config Setup
-![WARNING]
-**Do not** touch values within "database" yet, we will fill that out in a moment.
+> ![WARNING]
+> **Do not** touch values within "database" yet, we will fill that out in a moment.
 
 1. Rename `config.json.example` -> `config.json`
 2. Fill in each key with the proper IDs
 
-![IMPORTANT]
-Rewards is special. Follow the format `"level": id`. For example: `"5": 123321,`.
+> ![IMPORTANT]
+> Rewards is special. Follow the format `"level": id`. For example: `"5": 123321,`.
 
 ### Database setup
 
-![IMPORTANT]
-Sassy uses [Mongodb](https://www.mongodb.com/) for it's database. Insure you have Mongodb installed correctly before proceeding.
+> ![IMPORTANT]
+> Sassy uses [Mongodb](https://www.mongodb.com/) for it's database. Insure you have Mongodb installed correctly before proceeding.
 
 1. Open `config.json`
 2. Set `dev` to true if you plan on developing for the bot, else set it to false
