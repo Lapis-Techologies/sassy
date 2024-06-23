@@ -1,3 +1,4 @@
+import traceback
 import discord
 from time import time
 from random import randint
@@ -37,7 +38,17 @@ class Events(commands.Cog):
         elif isinstance(error, app_commands.CheckFailure):
             await inter.response.send_message("You do not have permission to use this command!")
         else:
-            await inter.response.send_message(f"An error occurred! {error}")
+            message = f"Uhh I may be high but I think I ran into an error.\n"
+            
+            error = getattr(error, "original", error)
+            tb = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
+
+            command = inter.command.name
+            params = ', '.join(inter.command.parameters) or "None"
+
+            message = message + f"```Command: {command}\nParameters: {params}\n\n{tb}```"
+
+            await inter.response.send_message(message, ephemeral=True)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
