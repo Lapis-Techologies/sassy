@@ -15,7 +15,7 @@ class Quote(commands.Cog):
     @app_commands.command(name="quote", description="You want some advice from me?")
     @app_commands.checks.cooldown(1, 10, key=lambda i: (i.guild_id, i.user.id))
     async def quote(self, inter: Interaction):
-        with open("cogs/fun/quote.txt", "r") as f:
+        with open("./resources/quote.txt", "r") as f:
             quotes = f.readlines()
 
         selected_quote = choice(quotes)

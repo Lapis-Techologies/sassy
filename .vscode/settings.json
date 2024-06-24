@@ -7,7 +7,7 @@
     "python.analysis.extraPaths": [
         "",
         "/home/bleh/.var/app/com.vscodium.codium/data/codium/extensions/joedevivo.vscode-circuitpython-0.2.0-linux-x64/stubs",
-        "/home/bleh/.var/app/com.vscodium.codium/config/VSCodium/User/globalStorage/joedevivo.vscode-circuitpython/bundle/20240618/adafruit-circuitpython-bundle-py-20240618/lib"
+        "/home/bleh/.var/app/com.vscodium.codium/config/VSCodium/User/globalStorage/joedevivo.vscode-circuitpython/bundle/20240624/adafruit-circuitpython-bundle-py-20240624/lib"
     ],
     "circuitpython.board.version": null
 }

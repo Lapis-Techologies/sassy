@@ -4,8 +4,10 @@ import discord
 from time import time
 from random import randint
 from typing import TYPE_CHECKING
+from discord.abc import PrivateChannel
+from discord.utils import get
 from discord.ext import commands
-from discord import app_commands, Interaction, Embed
+from discord import CategoryChannel, ForumChannel, RawReactionActionEvent, app_commands, Interaction, Embed
 from utils.adduser import add
 from utils.log import log
 
@@ -24,6 +26,9 @@ class Events(commands.Cog):
 
         if curs is None:
             await add(self.bot, message.author)
+            
+        if not isinstance(message.author, discord.Member):
+            return
 
         last_message = curs["last_message"]
 
@@ -74,6 +79,8 @@ class Events(commands.Cog):
         })
 
     async def handle_error(self, inter: Interaction, error: app_commands.AppCommandError) -> tuple[str, str, str, str | None, str]:
+        if inter.command is None:
+            raise Exception("")
         error = getattr(error, "original", error)
         tb = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
         final_tb = tb.split("File")[-1]
@@ -88,7 +95,10 @@ class Events(commands.Cog):
         if isinstance(inter.command, app_commands.ContextMenu):
             params = "None"
         else:
-            params = ', '.join([f"{param['name']}={param['value']}" for param in inter.data["options"]])
+            try:
+                params = ', '.join([f"{param['name']}={param['value']}" for param in inter.data["options"]])
+            except KeyError:
+                params = "None"
         
         return file_name, line, command, params, tb
 
@@ -120,6 +130,22 @@ class Events(commands.Cog):
             message = f"Uhh I may be high but I think I ran into an error.\n```File: {file_name}\nLine: {line}\nCommand: {command}\nParameters: {params}\n\n{tb}```"
 
             await inter.response.send_message(message, ephemeral=True)
+    
+    async def process_starboard(self, starboard, message, embed):
+        curs = await self.bot.starboard_db.find_one({"uid": message.id}, projection={"uid": 1, "saved_message": 1})
+
+        if curs is None:
+            sent_message = await self.bot.config["channels"]["starboard"].send(embed=embed, files=[await at.to_file() for at in message.attachments])
+            starboard["saved_message"] = sent_message.id
+
+            await self.bot.starboard_db.insert_one(starboard)
+        else:
+            sent_message = await self.bot.config["channels"]["starboard"].fetch_message(curs["saved_message"])
+            if sent_message is None:
+                return
+            
+            await sent_message.edit(embed=embed)
+            await self.bot.starboard_db.update_one({"uid": message.id}, {"$set": starboard})
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
@@ -160,6 +186,55 @@ class Events(commands.Cog):
             {"name": "Content", "value": f"```{message.content}```", "inline": False},
             {"name": "Channel", "value": f"{message.jump_url}", "inline": False},
         ])
+    
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
+        if payload.emoji.name != "⭐":
+            return
+        
+        channel = self.bot.get_channel(payload.channel_id)
+        if isinstance(channel, (ForumChannel, CategoryChannel, PrivateChannel)):
+            return
+        elif channel is None:
+            return
+
+        message = await channel.fetch_message(payload.message_id)
+        if message is None:
+            return
+        
+        reaction = get(message.reactions, emoji=payload.emoji.name)
+        if reaction is None:
+            return
+        
+        curs = await self.bot.user_db.find_one({"uid": message.author.id}, projection={"uid": 1})
+
+        if curs is None:
+            await add(self.bot, message.author)
+        
+        starboard = {
+            "uid": message.id,
+            "channel": channel.id,
+            "author": message.author.id,
+            "message": {
+                "id": message.id,
+                "content": message.content,
+                "attachments": [
+                    attachment.url for attachment in message.attachments
+                ],
+                "reactions": reaction.count
+            }
+        }
+
+        if message.author.avatar is None:
+            return
+
+        embed = Embed(title=message.author.display_name, description=message.content)
+        embed.add_field(name="Jump", value=message.jump_url)
+        embed.set_thumbnail(url=message.author.avatar.url or message.author.default_avatar.url)
+        embed.set_footer(text=f"{"⭐" * reaction.count if reaction.count < 8 else f"⭐x{reaction.count}"}")
+
+        await self.process_starboard(starboard, message, embed)
+
 
 
 async def setup(bot):
