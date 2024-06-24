@@ -6,7 +6,8 @@
     },
     "bot": {
         "token": "",
-        "prefix": ""
+        "prefix": "",
+        "starboard": 
     },
     "guild": {
       "id": ,
@@ -16,7 +17,8 @@
       "channels": {
         "welcome": ,
         "logs": ,
-        "drops":
+        "drops": ,
+        "starboard": 
       }
     },
     "xp": {

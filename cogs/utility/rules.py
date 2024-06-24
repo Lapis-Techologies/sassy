@@ -15,11 +15,11 @@ class Rules(commands.Cog):
     @app_commands.command(name="rules", description="Post the rules")
     @app_commands.checks.cooldown(1, 40, key=lambda i: (i.guild_id, i.user.id))
     async def ping(self, inter: Interaction):
-        with open("rules.json", "r") as f:
+        with open("./resources/rules.json", "r") as f:
             rules: list[dict[str, str]] = load(f)
         
         embed = Embed(title="Rules", color=0x17FF77)
-        embed.set_thumbnail(url="https://static.tvtropes.org/pmwiki/pub/images/lez_6011.png")
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1254314000347435090/1254545696187482263/lez_6011.png?ex=6679e23a&is=667890ba&hm=4c4c774ac8750b3e4648fc5e0b18cd9c07d194732580d755695fa26fde4626ad&")
 
         for i, entry in enumerate(rules):
             rule = next(iter(entry))

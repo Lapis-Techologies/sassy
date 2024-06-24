@@ -1,6 +1,6 @@
 <h1 align="center">
     <br>
-    <a href="https://www.youtube.com/watch?v=9OmR0ypCyOU"><img src="https://i.ytimg.com/vi/QvIgmc2G6lk/maxresdefault.jpg" alt="Sassy the Sasquatch Discord Bot"></a>
+    <a href="https://www.youtube.com/watch?v=9OmR0ypCyOU"><img src="https://i.ytimg.com/vi/QvIgmc2G6lk/maxresdefault.jpg" alt="Sassy the Sasquatch"></a>
     <br>
     Sassy the Sasquatch Bot
     <br>
@@ -72,32 +72,34 @@ Sassy the Discord bot is a general purpose bot themed around for the server [Sas
     "database": {
         "dev": false,
         "url": "mongodb://localhost:27017/",
-        "name": "sassy" 
+        "name": "coolname" 
     },
     "bot": {
-        "token": "asdasdasd.gjxlaz.asdonfyoushouldtotallyusethis",
-        "prefix": "?"
+        "token": "wowie.this.isaconfig",
+        "prefix": "?",
+        "starboard": 5
     },
     "guild": {
-      "id": 12432135,
+      "id": 90237802347890234,
       "roles": {
-        "admin": 138694
+        "admin": 942340784235234
       },
       "channels": {
-        "welcome": 5445342343,
-        "logs": 1212551,
-        "drops": 342342342
+        "welcome": 243978789423423,
+        "logs": 43978423978234897,
+        "drops": 2347634727946833,
+        "starboard": 2347897894632378493
       }
     },
     "xp": {
       "rewards": {
-        "5": 1264236,
-        "10": 764235456,
-        "15": 1235843,
-        "20": 45233245
+        "5": 2344232342347803443,
+        "10": 4308942378023482348,
+        "15": 2348742387234780234,
+        "20": 8974378943624234589
       }
     }
-  }
+}
 ```
 
 

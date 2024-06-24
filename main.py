@@ -17,8 +17,7 @@ class Sassy(commands.Bot):
         self.economy_db = economy_db
         self.starboard_db = starboard_db
         self.remove_command("help")
-        self.version = "1.6.3"
-        # TODO: Add load, unload, and refresh command
+        self.version = "1.6.4"
 
     async def on_ready(self):
         await self.process_config(self.config)
@@ -55,6 +54,9 @@ class Sassy(commands.Bot):
         self.config["channels"] = {}
         self.config["roles"] = {}
         self.config["xp"] = {"rewards": {}}
+
+        if self.config["guild"] == None:
+            raise commands.GuildNotFound(f"Could not find guild with id {self.config["guild"]}")
 
         for level, reward in rewards.items():
             self.config["xp"]["rewards"][level] = self.config["guild"].get_role(reward)

@@ -31,6 +31,12 @@ class Debug(commands.Cog):
     @commands.is_owner()
     @app_commands.command(name="debug", description="Gives some general information about the bots status")
     async def debug(self, inter: Interaction):
+        # type saftey
+        if self.bot.user is None:
+            return
+        if self.bot.user.avatar is None:
+            return
+        
         embed = Embed(title="Debug", description="General Information about the bot's status", color=0x7799FF)
 
         name = self.bot.user.name
