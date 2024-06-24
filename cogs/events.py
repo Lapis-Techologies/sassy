@@ -26,6 +26,7 @@ class Events(commands.Cog):
 
         if curs is None:
             await add(self.bot, message.author)
+            return
             
         if not isinstance(message.author, discord.Member):
             return
