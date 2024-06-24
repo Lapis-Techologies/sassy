@@ -2,6 +2,8 @@ import os
 import pathlib
 import json
 import discord
+from typing import Dict, Any
+from typing_extensions import TypeGuard
 from discord.ext import commands
 from motor.motor_asyncio import AsyncIOMotorClient
 
@@ -17,7 +19,7 @@ class Sassy(commands.Bot):
         self.economy_db = economy_db
         self.starboard_db = starboard_db
         self.remove_command("help")
-        self.version = "1.6.6"
+        self.version = "1.7.0"
 
     async def on_ready(self):
         await self.process_config(self.config)
@@ -27,20 +29,44 @@ class Sassy(commands.Bot):
         print(f"Synced {synced} commands!")
     
     async def verify_keys(self, guild_id, guild_roles, guild_channels, rewards):
+        checks = {
+            0: {
+                "failed": False,
+                "message": "guild id"
+            },
+            1: {
+                "failed": False,
+                "message": "guild roles"
+            },
+            2: {
+                "failed": False,
+                "message": "guild channels"
+            },
+            3: {
+                "failed": False,
+                "message": "xp rewards"
+            }
+        }
+        message = "You need to provide a %s in the config.json file!"
+
         if guild_id is None:
-            raise KeyError("You need to provide a guild id in the config.json file!")
-        elif guild_roles is None:
-            raise KeyError("You need to provide guild roles in the config.json file!")
-        elif guild_channels is None:
-            raise KeyError("You need to provide guild channels in the config.json file!")
-        elif rewards is None:
-            raise KeyError("You need to provide xp rewards in the config.json file!")
-    
-    async def verify_guild(self, guild, xp):
-        if guild is None:
-            raise KeyError("You need to provide a guild in the config.json file!")
-        elif xp is None:
-            raise KeyError("You need to provide an xp field in the config.json file!")
+            checks[0]["failed"] = True
+        if guild_roles is None:
+            checks[1]["failed"] = True
+        if guild_channels is None:
+            checks[2]["failed"] = True
+        if rewards is None:
+            checks[3]["failed"] = True
+        
+        needed = []
+        
+        for _, results in checks.items():
+            failed = results["failed"]
+            if failed:
+                needed.append(results["message"])
+        
+        if len(needed) != 0:
+            raise KeyError(message % ', '.join(needed))
 
     async def verify_config(self, rewards, guild_roles, guild_channels):
         if self.config["guild"] == None:
@@ -60,7 +86,10 @@ class Sassy(commands.Bot):
         xp = config.get("xp")
         self.config = {}
 
-        await self.verify_guild(guild, xp)
+        if guild is None:
+            raise KeyError("You must provide a guild in config.json!")
+        elif xp is None:
+            raise KeyError("You must provide xp reward in config.json!")
 
         guild_id = guild.get("id", None)
         guild_roles = guild.get("roles", None)
