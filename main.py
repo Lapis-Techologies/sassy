@@ -17,7 +17,7 @@ class Sassy(commands.Bot):
         self.economy_db = economy_db
         self.starboard_db = starboard_db
         self.remove_command("help")
-        self.version = "1.6.5"
+        self.version = "1.6.7"
 
     async def on_ready(self):
         await self.process_config(self.config)
@@ -27,14 +27,44 @@ class Sassy(commands.Bot):
         print(f"Synced {synced} commands!")
     
     async def verify_keys(self, guild_id, guild_roles, guild_channels, rewards):
+        checks = {
+            0: {
+                "failed": False,
+                "message": "guild id"
+            },
+            1: {
+                "failed": False,
+                "message": "guild roles"
+            },
+            2: {
+                "failed": False,
+                "message": "guild channels"
+            },
+            3: {
+                "failed": False,
+                "message": "xp rewards"
+            }
+        }
+        message = "You need to provide a %s in the config.json file!"
+
         if guild_id is None:
-            raise KeyError("You need to provide a guild id in the config.json file!")
+            checks[0]["failed"] = True
         elif guild_roles is None:
-            raise KeyError("You need to provide guild roles in the config.json file!")
+            checks[1]["failed"] = True
         elif guild_channels is None:
-            raise KeyError("You need to provide guild channels in the config.json file!")
+            checks[2]["failed"] = True
         elif rewards is None:
-            raise KeyError("You need to provide xp rewards in the config.json file!")
+            checks[3]["failed"] = True
+        
+        needed = []
+        
+        for _, results in checks.items():
+            failed = results["failed"]
+            if failed:
+                needed.append(results["message"])
+        
+        if len(needed) != 0:
+            raise KeyError(message % ', '.join(needed))
     
     async def verify_guild(self, guild, xp):
         if guild is None:
