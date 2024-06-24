@@ -14,7 +14,7 @@ class Help(commands.Cog):
 
     @app_commands.command(name="help", description="Get help on a command.")
     @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
-    async def help(self, inter: Interaction):
+    async def help(self, inter: Interaction):   # TODO: Use pages
         await inter.response.defer()
 
         embed = discord.Embed(

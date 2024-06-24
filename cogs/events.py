@@ -95,7 +95,10 @@ class Events(commands.Cog):
         if isinstance(inter.command, app_commands.ContextMenu):
             params = "None"
         else:
-            params = ', '.join([f"{param['name']}={param['value']}" for param in inter.data["options"]])
+            try:
+                params = ', '.join([f"{param['name']}={param['value']}" for param in inter.data["options"]])
+            except KeyError:
+                params = "None"
         
         return file_name, line, command, params, tb
 

@@ -17,7 +17,7 @@ class Sassy(commands.Bot):
         self.economy_db = economy_db
         self.starboard_db = starboard_db
         self.remove_command("help")
-        self.version = "1.6.4"
+        self.version = "1.6.5"
 
     async def on_ready(self):
         await self.process_config(self.config)
@@ -25,22 +25,8 @@ class Sassy(commands.Bot):
 
         synced = len(await self.tree.sync())
         print(f"Synced {synced} commands!")
-
-    async def process_config(self, config: dict):
-        guild = config.get("guild")
-        xp = config.get("xp")
-        self.config = {}
-
-        if guild is None:
-            raise KeyError("You need to provide a guild in the config.json file!")
-        elif xp is None:
-            raise KeyError("You need to provide an xp field in the config.json file!")
-
-        guild_id = guild.get("id")
-        guild_roles = guild.get("roles")
-        guild_channels = guild.get("channels")
-        rewards = xp["rewards"]
-
+    
+    async def verify_keys(self, guild_id, guild_roles, guild_channels, rewards):
         if guild_id is None:
             raise KeyError("You need to provide a guild id in the config.json file!")
         elif guild_roles is None:
@@ -49,12 +35,14 @@ class Sassy(commands.Bot):
             raise KeyError("You need to provide guild channels in the config.json file!")
         elif rewards is None:
             raise KeyError("You need to provide xp rewards in the config.json file!")
+    
+    async def verify_guild(self, guild, xp):
+        if guild is None:
+            raise KeyError("You need to provide a guild in the config.json file!")
+        elif xp is None:
+            raise KeyError("You need to provide an xp field in the config.json file!")
 
-        self.config["guild"] = self.get_guild(guild_id)
-        self.config["channels"] = {}
-        self.config["roles"] = {}
-        self.config["xp"] = {"rewards": {}}
-
+    async def verify_config(self, rewards, guild_roles, guild_channels):
         if self.config["guild"] == None:
             raise commands.GuildNotFound(f"Could not find guild with id {self.config["guild"]}")
 
@@ -66,6 +54,27 @@ class Sassy(commands.Bot):
 
         for channel in guild_channels:
             self.config["channels"][channel] = self.config["guild"].get_channel(guild_channels[channel])
+
+    async def process_config(self, config: dict):
+        guild = config.get("guild")
+        xp = config.get("xp")
+        self.config = {}
+
+        await self.verify_guild(guild, xp)
+
+        guild_id = guild.get("id", None)
+        guild_roles = guild.get("roles", None)
+        guild_channels = guild.get("channels", None)
+        rewards = xp.get("rewards", None)
+
+        await self.verify_keys(guild_id, guild_roles, guild_channels, rewards)
+
+        self.config["guild"] = self.get_guild(guild_id)
+        self.config["channels"] = {}
+        self.config["roles"] = {}
+        self.config["xp"] = {"rewards": {}}
+
+        await self.verify_config(rewards, guild_roles, guild_channels)
 
     async def load_cogs(self):
         if not os.path.exists("./cogs"):
@@ -134,7 +143,6 @@ def load_config():
     }
 
 def main() -> None:
-
     config = load_config()
 
     TOKEN = config["token"]

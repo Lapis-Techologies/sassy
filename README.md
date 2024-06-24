@@ -13,7 +13,8 @@
     <img alt="Python Library" src="https://img.shields.io/badge/Library-discord.py-blue">
     <img alt="Platforms" src="https://img.shields.io/badge/Platforms-Windows 10 | Linux (Debian)-green">
     <img alt="PRs" src="https://img.shields.io/badge/PRs-welcome-green">
-    <img alt="Version" src="https://img.shields.io/badge/Version-1.6.3-green">
+    <img alt="Version" src="https://img.shields.io/badge/Version-1.6.5-green">
+    <img alt="Stable" src="https://img.shields.io/badge/Status-Stable-green">
 </p>
 
 
