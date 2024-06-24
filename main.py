@@ -17,7 +17,7 @@ class Sassy(commands.Bot):
         self.economy_db = economy_db
         self.starboard_db = starboard_db
         self.remove_command("help")
-        self.version = "1.6.5"
+        self.version = "1.6.6"
 
     async def on_ready(self):
         await self.process_config(self.config)
