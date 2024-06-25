@@ -7,7 +7,12 @@
     "bot": {
         "token": "",
         "prefix": "",
-        "starboard": 
+        "starboard": ,
+        "ai": {
+          "enabled": ,
+          "character": ,
+          "token": 
+        }
     },
     "guild": {
       "id": ,
@@ -18,7 +23,8 @@
         "welcome": ,
         "logs": ,
         "drops": ,
-        "starboard": 
+        "starboard": ,
+        "ai": 
       }
     },
     "xp": {

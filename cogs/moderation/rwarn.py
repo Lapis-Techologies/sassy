@@ -1,8 +1,9 @@
 import discord
 from typing import TYPE_CHECKING
 from discord.ext import commands
-from discord import app_commands, Interaction
+from discord import app_commands, Interaction, User
 from utils.adduser import add
+from utils.log import log
 
 
 if TYPE_CHECKING:
@@ -18,11 +19,16 @@ class RWarn(commands.Cog):
         await inter.response.defer()
         invoker = inter.user
 
-        if not invoker.get_role(self.bot.config['roles']['admin'].id):
+        if isinstance(invoker, User):
+            return
+
+        admin = await self.bot.config.get("roles", "admin")
+
+        if not invoker.get_role(admin):
             await inter.followup.send("You do not have permission to use this command!", emphemeral=True)
             return
 
-        if user.get_role(self.bot.config['roles']['admin'].id):
+        if user.get_role(admin):
             return
 
         if user == invoker:
@@ -37,8 +43,8 @@ class RWarn(commands.Cog):
             await add(bot=self.bot, member=user)
             await inter.followup.send("Case ID not found!", ephemeral=True)
         else:
-            for log in curs["logs"]:
-                if log["case_id"] == case_id:
+            for lg in curs["logs"]:
+                if lg["case_id"] == case_id:
                     await self.bot.user_db.update_one({"uid": user.id}, {    # Remove the case
                         "$pull": {
                             "logs": {

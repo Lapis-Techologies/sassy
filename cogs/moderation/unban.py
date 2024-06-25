@@ -1,7 +1,7 @@
 import discord
 from typing import TYPE_CHECKING
 from discord.ext import commands
-from discord import app_commands, Interaction
+from discord import app_commands, Interaction, User
 from utils.adduser import add
 from utils.log import log
 
@@ -19,11 +19,16 @@ class UnBan(commands.Cog):
         await inter.response.defer()
         invoker = inter.user
 
-        if not invoker.get_role(self.bot.config['roles']['admin'].id):
+        if isinstance(invoker, User):
+            return
+
+        admin = await self.bot.config.get("roles", "admin")
+
+        if not invoker.get_role(admin):
             await inter.followup.send("You do not have permission to use this command!")
             return
 
-        if user.get_role(self.bot.config['roles']['admin'].id):
+        if user.get_role(admin):
             return
 
         if user == invoker:
@@ -31,8 +36,14 @@ class UnBan(commands.Cog):
 
         if user.id == self.bot.user.id:
             return
+        
+        guild = await self.bot.config.get("guild", "id")
+        guild = self.bot.get_guild(guild)
 
-        await self.bot.config["guild"].unban(user, reason=reason)
+        if guild is None:
+            raise commands.GuildNotFound(f"Failed to find guild with id {await self.bot.config.get("guild", "id")}")
+
+        await guild.unban(user, reason=reason)
         await inter.followup.send(f"{user.mention} has been unbanned from the server!", ephemeral=True)
 
         curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"logs": 1})

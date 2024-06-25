@@ -1,109 +1,38 @@
 import os
+import asyncio
 import pathlib
-import json
 import discord
-from typing import Dict, Any
-from typing_extensions import TypeGuard
 from discord.ext import commands
 from motor.motor_asyncio import AsyncIOMotorClient
+from utils import configloader
 
+
+__VERSION__ = "1.7.1"
 
 class Sassy(commands.Bot):
     """
     Sassy the Sasquatch discord bot!!!!
     """
-    def __init__(self, config: dict, user_db, economy_db, starboard_db,  *args, **kwargs):
+    def __init__(self, config_handler, user_db, economy_db, starboard_db,  *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.config = config
         self.user_db = user_db
         self.economy_db = economy_db
         self.starboard_db = starboard_db
+        self.version = __VERSION__
+        
+        # normally this wouldnt be something we would want public, but in this case we will use it to help manage config accessing
+        self.config: configloader.ConfigHandler = config_handler
         self.remove_command("help")
-        self.version = "1.7.0"
 
     async def on_ready(self):
-        await self.process_config(self.config)
         await self.load_cogs()
+
+        print(await self.config.config)
 
         synced = len(await self.tree.sync())
         print(f"Synced {synced} commands!")
-    
-    async def verify_keys(self, guild_id, guild_roles, guild_channels, rewards):
-        checks = {
-            0: {
-                "failed": False,
-                "message": "guild id"
-            },
-            1: {
-                "failed": False,
-                "message": "guild roles"
-            },
-            2: {
-                "failed": False,
-                "message": "guild channels"
-            },
-            3: {
-                "failed": False,
-                "message": "xp rewards"
-            }
-        }
-        message = "You need to provide a %s in the config.json file!"
-
-        if guild_id is None:
-            checks[0]["failed"] = True
-        if guild_roles is None:
-            checks[1]["failed"] = True
-        if guild_channels is None:
-            checks[2]["failed"] = True
-        if rewards is None:
-            checks[3]["failed"] = True
         
-        needed = []
-        
-        for _, results in checks.items():
-            failed = results["failed"]
-            if failed:
-                needed.append(results["message"])
-        
-        if len(needed) != 0:
-            raise KeyError(message % ', '.join(needed))
-
-    async def verify_config(self, rewards, guild_roles, guild_channels):
-        if self.config["guild"] == None:
-            raise commands.GuildNotFound(f"Could not find guild with id {self.config["guild"]}")
-
-        for level, reward in rewards.items():
-            self.config["xp"]["rewards"][level] = self.config["guild"].get_role(reward)
-
-        for role in guild_roles:
-            self.config["roles"][role] = self.config["guild"].get_role(guild_roles[role])
-
-        for channel in guild_channels:
-            self.config["channels"][channel] = self.config["guild"].get_channel(guild_channels[channel])
-
-    async def process_config(self, config: dict):
-        guild = config.get("guild")
-        xp = config.get("xp")
-        self.config = {}
-
-        if guild is None:
-            raise KeyError("You must provide a guild in config.json!")
-        elif xp is None:
-            raise KeyError("You must provide xp reward in config.json!")
-
-        guild_id = guild.get("id", None)
-        guild_roles = guild.get("roles", None)
-        guild_channels = guild.get("channels", None)
-        rewards = xp.get("rewards", None)
-
-        await self.verify_keys(guild_id, guild_roles, guild_channels, rewards)
-
-        self.config["guild"] = self.get_guild(guild_id)
-        self.config["channels"] = {}
-        self.config["roles"] = {}
-        self.config["xp"] = {"rewards": {}}
-
-        await self.verify_config(rewards, guild_roles, guild_channels)
+        print(f"Logged in as {self.user.name} ({self.user.id})") if self.user else None
 
     async def load_cogs(self):
         if not os.path.exists("./cogs"):
@@ -114,7 +43,9 @@ class Sassy(commands.Bot):
         if cogs.is_file():
             raise OSError("'cogs' should be a folder/directory, not a file!")
 
+        print(f"{"=" * 10} COGS {"=" * 10}")
         await self._process_folder(cogs, 'cogs')
+        print("=" * 26)
 
     async def _process_folder(self, path: pathlib.Path, path_start: str):
         banned = (
@@ -139,50 +70,37 @@ class Sassy(commands.Bot):
                     print(f"Failed to load {module} with error: {e}")
 
 
-def load_config():
-    with open("config.json", "r") as f:
-        config = json.load(f)
+async def main() -> None:
+    config_handler = configloader.ConfigHandler()
+    await config_handler.set_config("config.json")
 
     intents = discord.Intents.all()
-
-    is_dev = config["database"]["dev"]
-    branch = "dev" if is_dev else "prod"
-    url = config["database"]["url"]
-
-    mongo = AsyncIOMotorClient(url)
-    collection_name = config["database"]["name"] + f"-{branch}"
-    db = mongo[collection_name]
-    user_db = db["user"]
-    economy_db = db["economy"]
-    starboard_db = db["starboard"]
-
-    token = config["bot"]["token"]
-
-    return {
-        "token": token,
-        "user_db": user_db,
-        "economy_db": economy_db,
-        "starboard_db": starboard_db,
-        "config": config,
-        "intents": intents,
-        "prefix": config["bot"]["prefix"]
-    }
-
-def main() -> None:
-    config = load_config()
-
-    TOKEN = config["token"]
+    token = await config_handler.get("bot", "token")
+    prefix = await config_handler.get("bot", "prefix")
     
-    prefix = config["prefix"]
-    user_db = config["user_db"]
-    economy_db = config["economy_db"]
-    starboard_db = config["starboard_db"]
-    intents = config["intents"]
-    config = config["config"]
+    is_dev = await config_handler.get("database", "dev")
+    branch = "dev" if is_dev else "prod"
 
-    bot = Sassy(command_prefix=prefix, intents=intents, config=config, user_db=user_db, economy_db=economy_db, starboard_db=starboard_db)
-    bot.run(TOKEN)
+    url = await config_handler.get("database", "url")
+    name = await config_handler.get("database", "name")
+
+    mongo_client = AsyncIOMotorClient(url)
+    collection_name = f"{name}-{branch}"
+    database = mongo_client[collection_name]
+    user_db = database["user"]
+    economy_db = database["economy"]
+    starboard_db = database["starboard"]
+
+    bot = Sassy(command_prefix=prefix, intents=intents, config_handler=config_handler, user_db=user_db, economy_db=economy_db, starboard_db=starboard_db)
+    await bot.start(token)
+    await bot.close()
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    
+    loop.run_until_complete(main())

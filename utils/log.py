@@ -1,7 +1,12 @@
-from discord import Embed
+from typing import TYPE_CHECKING
+from discord import Embed, TextChannel
 
 
-async def log(bot, interaction, action, reason=None, fields=None):
+if TYPE_CHECKING:
+    from main import Sassy
+
+
+async def log(bot: "Sassy", interaction, action, reason=None, fields=None):
     """
     Helper function to add logs to the log channel
     :param bot:
@@ -39,5 +44,10 @@ async def log(bot, interaction, action, reason=None, fields=None):
         inline = field["inline"]
 
         embed.add_field(name=name, value=value, inline=inline)
+    
+    logs = bot.get_channel(await bot.config.get("channels", "logs"))
 
-    await bot.config["channels"]["logs"].send(embed=embed)
+    if logs is None or not isinstance(logs, TextChannel):
+        return
+
+    await logs.send(embed=embed)

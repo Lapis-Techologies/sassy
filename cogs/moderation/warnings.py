@@ -1,7 +1,7 @@
 import discord
 from typing import TYPE_CHECKING
 from discord.ext import commands
-from discord import app_commands, Interaction
+from discord import app_commands, Interaction, User
 from utils.adduser import add
 
 
@@ -14,12 +14,17 @@ class Warnings(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="warnings", description="Gets the warnings of a user.")
-    async def warnings(self, inter: Interaction, user: discord.Member, case_id: str = None):
+    async def warnings(self, inter: Interaction, user: discord.Member, case_id: str | None = None):
         await inter.response.defer()
 
         invoker = inter.user
 
-        if not invoker.get_role(self.bot.config['roles']['admin'].id):
+        if isinstance(invoker, User):
+            return
+
+        admin = await self.bot.config.get("roles", "admin")
+
+        if not invoker.get_role(admin):
             await inter.followup.send("You do not have permission to use this command!", ephemeral=True)
             return
 

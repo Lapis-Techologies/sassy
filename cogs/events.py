@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING
 from discord.abc import PrivateChannel
 from discord.utils import get
 from discord.ext import commands
-from discord import CategoryChannel, ForumChannel, RawReactionActionEvent, app_commands, Interaction, Embed
+from discord import CategoryChannel, ForumChannel, RawReactionActionEvent, TextChannel, app_commands, Interaction, Embed
+from characterai import aiocai
 from utils.adduser import add
 from utils.log import log
 
@@ -20,6 +21,17 @@ class Events(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
         self._old_tree_error = None
+        self.me = None
+        self.client = None
+    
+    def cog_load(self):
+        tree = self.bot.tree
+        self._old_tree_error = tree.on_error
+        tree.on_error = self.on_slash_error
+
+    def cog_unload(self):
+        tree = self.bot.tree
+        tree.on_error = self._old_tree_error
     
     async def handle_xp(self, message: discord.Message):
         curs = await self.bot.user_db.find_one({"uid": message.author.id}, projection={"xp": 1, "level": 1, "last_message": 1})
@@ -66,7 +78,7 @@ class Events(commands.Cog):
 
             await message.channel.send(f"{message.author.mention}", embed=embed)
 
-            for lvl, reward in self.bot.config["xp"]["rewards"].items():
+            for lvl, reward in self.bot.config.get("xp", "rewards").items():
                 if level == int(lvl):
                     # User has earned a new reward!
                     await message.author.add_roles(reward)
@@ -103,15 +115,6 @@ class Events(commands.Cog):
         
         return file_name, line, command, params, tb
 
-    def cog_load(self):
-        tree = self.bot.tree
-        self._old_tree_error = tree.on_error
-        tree.on_error = self.on_slash_error
-
-    def cog_unload(self):
-        tree = self.bot.tree
-        tree.on_error = self._old_tree_error
-
     async def on_slash_error(self, inter: Interaction, error: app_commands.AppCommandError):    # noqa
         if isinstance(error, app_commands.CommandNotFound):
             await inter.response.send_message("Command not found!")
@@ -136,22 +139,67 @@ class Events(commands.Cog):
         curs = await self.bot.starboard_db.find_one({"uid": message.id}, projection={"uid": 1, "saved_message": 1})
 
         if curs is None:
-            sent_message = await self.bot.config["channels"]["starboard"].send(embed=embed, files=[await at.to_file() for at in message.attachments])
+            # sent_message = await self.bot.config["channels"]["starboard"].send(embed=embed, files=[await at.to_file() for at in message.attachments])
+            starboard_channel = self.bot.get_channel(await self.bot.config.get("channels", "starboard"))
+
+            if starboard_channel is None or not isinstance(starboard_channel, TextChannel):
+                return
+
+            sent_message = await starboard_channel.send(embed=embed, files=[await attac.to_file() for attac in message.attachments])
             starboard["saved_message"] = sent_message.id
 
             await self.bot.starboard_db.insert_one(starboard)
         else:
-            sent_message = await self.bot.config["channels"]["starboard"].fetch_message(curs["saved_message"])
+            # sent_message = await self.bot.config["channels"]["starboard"].fetch_message(curs["saved_message"])
+            starboard_channel = self.bot.get_channel(await self.bot.config.get("channels", "starboard"))
+
+            if starboard_channel is None or not isinstance(starboard_channel, TextChannel):
+                return
+            
+            sent_message = await starboard_channel.fetch_message(curs["saved_message"])
             if sent_message is None:
                 return
             
             await sent_message.edit(embed=embed)
             await self.bot.starboard_db.update_one({"uid": message.id}, {"$set": starboard})
+    
+    async def chat_with_sassy(self, message: discord.Message):
+        if not await self.bot.config.get("bot", "ai", "enabled"):
+            return
+        
+        channel_id = message.channel.id
+
+        chat_channel_id = await self.bot.config.get("guild", "channels", "ai")
+
+        if channel_id != chat_channel_id:
+            return
+        
+        # cai_token = await self.bot.config.get("bot", "ai")
+        
+        # if self.me is None or self.client is None:
+        #     client = aiocai.Client(cai_token)
+
+        #     me = await client.get_me()
+
+        #     self.client = client
+        #     self.me = me
+        
+
+        # async with await self.client.connect() as chat:
+        #     new, answer = await chat.new_chat(
+        #         await self.bot.config.get("")
+        #     )
+
+        print("chat_with_sassy() MAKE ME!!")
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        await self.bot.config["channels"]["welcome"].send(f"{member.mention} Whats goin on mate? You're druggo #{len(member.guild.members)}, fuckin skits mate")
+        welcome_channel = self.bot.get_channel(await self.bot.config.get("channels", "welcome"))
 
+        if welcome_channel is None or not isinstance(welcome_channel, TextChannel):
+            await add(bot=self.bot, member=member)
+            return
+        await welcome_channel.send(f"{member.mention} Whats goin on mate? You're druggo #{len(member.guild.members)}, fuckin skits mate")
         await add(bot=self.bot, member=member)
     
     @commands.Cog.listener()
@@ -160,6 +208,8 @@ class Events(commands.Cog):
             return
         
         await self.handle_xp(message)
+
+        await self.chat_with_sassy(message)
 
 
     @commands.Cog.listener()

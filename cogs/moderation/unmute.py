@@ -1,7 +1,7 @@
 import discord
 from typing import TYPE_CHECKING
 from discord.ext import commands
-from discord import app_commands, Interaction
+from discord import app_commands, Interaction, User
 from utils.log import log
 
 
@@ -19,7 +19,12 @@ class UnMute(commands.Cog):
 
         invoker = inter.user
 
-        if not invoker.get_role(self.bot.config["roles"]["admin"].id):
+        if isinstance(invoker, User):
+            return
+
+        admin = await self.bot.config.get("roles", "admin")
+
+        if not invoker.get_role(admin):
             await inter.followup.send("You do not have the required role to use this command!")
             return
 

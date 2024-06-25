@@ -1,7 +1,7 @@
 import discord
 from typing import TYPE_CHECKING
 from discord.ext import commands
-from discord import app_commands, Interaction
+from discord import app_commands, Interaction, User
 from utils.adduser import add
 
 
@@ -19,7 +19,12 @@ class UserInfo(commands.Cog):
 
         invoker = inter.user
 
-        if not invoker.get_role(self.bot.config['roles']['admin'].id):
+        if isinstance(invoker, User):
+            return
+
+        admin = await self.bot.config.get("roles", "admin")
+
+        if not invoker.get_role(admin):
             await inter.followup.send("You do not have permission to use this command!", ephemeral=True)
             return
 
@@ -27,13 +32,13 @@ class UserInfo(commands.Cog):
             title=f"User Information for {member} ({member.id})",
             color=discord.Color.green()
         )
-
-        embed.set_thumbnail(url=member.avatar.url)
+            
+        embed.set_thumbnail(url=member.avatar.url or member.default_avatar.url) if member.avatar is not None else None
 
         curs = await self.bot.user_db.find_one({"uid": member.id}, projection={"logs": 1})
 
         if curs is None:
-            await add(bot=self.bot, member=user)
+            await add(bot=self.bot, member=member)
 
             embed.add_field(name="Choomah Coins", value="0", inline=False)
             embed.add_field(name="Logs", value="No logs found for this user.", inline=False)

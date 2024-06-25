@@ -1,7 +1,7 @@
 import discord
 from typing import TYPE_CHECKING
 from discord.ext import commands
-from discord import app_commands, Interaction
+from discord import app_commands, Interaction, User
 from utils.adduser import add
 
 
@@ -14,12 +14,17 @@ class Mutes(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="mutes", description="View all mutes for a specified user.")
-    async def mutes(self, inter: Interaction, member: discord.Member, case_id: str = None):
+    async def mutes(self, inter: Interaction, member: discord.Member, case_id: str | None = None):
         await inter.response.defer()
 
         invoker = inter.user
 
-        if not invoker.get_role(self.bot.config['roles']['admin'].id):
+        if isinstance(invoker, User):
+            return
+
+        admin = await self.bot.config.get("roles", "admin")
+
+        if not invoker.get_role(admin):
             await inter.followup.send("You do not have permission to use this command!", ephemeral=True)
             return
 
@@ -78,7 +83,7 @@ class Mutes(commands.Cog):
         if curs is None:
             await inter.followup.send("No mutes found for this user.", ephemeral=True)
 
-            await add(bot=self.bot, member=user)
+            await add(bot=self.bot, member=member)
 
             return
 
