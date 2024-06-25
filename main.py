@@ -124,16 +124,13 @@ class Sassy(commands.Bot):
         for item in path.iterdir():
             if item.name in banned:
                 continue
+            
+            if item.name.startswith("IGNORE_"):
+                continue
 
             if item.is_dir():
-                if item.name.startswith("IGNORE_"):
-                    continue
-
                 await self._process_folder(item, f"{path_start}.{item.name}")
-            elif item.is_file() and item.suffix == ".py":
-                if item.name.startswith("IGNORE_"):
-                    continue
-                
+            elif item.is_file() and item.suffix == ".py":          
                 module = f"{path_start}.{item.stem}"
                 try:
                     await self.load_extension(module)

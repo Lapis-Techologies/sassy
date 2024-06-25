@@ -98,7 +98,7 @@ class Events(commands.Cog):
         else:
             try:
                 params = ', '.join([f"{param['name']}={param['value']}" for param in inter.data["options"]])
-            except KeyError:
+            except Exception:
                 params = "None"
         
         return file_name, line, command, params, tb
