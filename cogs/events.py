@@ -8,7 +8,6 @@ from discord.abc import PrivateChannel
 from discord.utils import get
 from discord.ext import commands
 from discord import CategoryChannel, ForumChannel, RawReactionActionEvent, TextChannel, app_commands, Interaction, Embed
-from characterai import aiocai
 from utils.adduser import add
 from utils.log import log
 
@@ -21,8 +20,6 @@ class Events(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
         self._old_tree_error = None
-        self.me = None
-        self.client = None
     
     def cog_load(self):
         tree = self.bot.tree
@@ -93,7 +90,8 @@ class Events(commands.Cog):
 
     async def handle_error(self, inter: Interaction, error: app_commands.AppCommandError) -> tuple[str, str, str, str | None, str]:
         if inter.command is None:
-            raise Exception("")
+            raise Exception("interaction cannot be found!")
+        
         error = getattr(error, "original", error)
         tb = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
         final_tb = tb.split("File")[-1]
@@ -162,35 +160,6 @@ class Events(commands.Cog):
             
             await sent_message.edit(embed=embed)
             await self.bot.starboard_db.update_one({"uid": message.id}, {"$set": starboard})
-    
-    async def chat_with_sassy(self, message: discord.Message):
-        if not await self.bot.config.get("bot", "ai", "enabled"):
-            return
-        
-        channel_id = message.channel.id
-
-        chat_channel_id = await self.bot.config.get("guild", "channels", "ai")
-
-        if channel_id != chat_channel_id:
-            return
-        
-        # cai_token = await self.bot.config.get("bot", "ai")
-        
-        # if self.me is None or self.client is None:
-        #     client = aiocai.Client(cai_token)
-
-        #     me = await client.get_me()
-
-        #     self.client = client
-        #     self.me = me
-        
-
-        # async with await self.client.connect() as chat:
-        #     new, answer = await chat.new_chat(
-        #         await self.bot.config.get("")
-        #     )
-
-        print("chat_with_sassy() MAKE ME!!")
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
@@ -208,9 +177,6 @@ class Events(commands.Cog):
             return
         
         await self.handle_xp(message)
-
-        await self.chat_with_sassy(message)
-
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):

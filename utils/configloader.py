@@ -1,7 +1,6 @@
 import os
 import json
-from typing import Any
-from copy import deepcopy
+from typing import Any, override
 
 
 class ConfigHandler:
@@ -18,12 +17,10 @@ class ConfigHandler:
     
     async def set_config(self, config_obj: str | dict | Any) -> None:
         config = await self._verify_config_integrity(config_obj)
-        await self._verify_config(config)
         self._config = config
     
     async def get(self, *args) -> Any:
-        # Dont accidentally modify the current config
-        result = deepcopy(self._config)
+        result = self._config
         try:
             for arg in args:
                 result = result[arg]
@@ -55,6 +52,17 @@ class ConfigHandler:
         with open(config_obj, 'r') as f:
             config = json.load(f)
         return config
+
+
+class BotConfig(ConfigHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+    @override
+    async def set_config(self, config_obj: str | dict | Any) -> None:
+        config = await self._verify_config_integrity(config_obj)
+        await self._verify_config(config)
+        self._config = config
     
     async def _verify_config(self, config: dict):
         # Verify database configuration
@@ -80,17 +88,6 @@ class ConfigHandler:
         if 'starboard' not in bot or not isinstance(bot['starboard'], int):
             raise self.error.ConfigError("Missing or invalid 'bot.starboard'")
         
-        # Verify bot.ai configuration
-        ai = bot.get('ai')
-        if not ai:
-            raise self.error.ConfigError("Missing 'bot.ai' configuration")
-        if 'enabled' not in ai or not isinstance(ai['enabled'], bool):
-            raise self.error.ConfigError("Missing or invalid 'bot.ai.enabled'")
-        if 'character' not in ai or not isinstance(ai['character'], str):
-            raise self.error.ConfigError("Missing or invalid 'bot.ai.character'")
-        if 'token' not in ai or not isinstance(ai['token'], str):
-            raise self.error.ConfigError("Missing or invalid 'bot.ai.token'")
-        
         # Verify guild configuration
         guild = config.get('guild')
         if not guild:
@@ -106,7 +103,8 @@ class ConfigHandler:
         channels = guild.get('channels')
         if not channels:
             raise self.error.ConfigError("Missing 'guild.channels' configuration")
-        required_channels = ['welcome', 'logs', 'drops', 'starboard', 'ai']
+        
+        required_channels = ['welcome', 'logs', 'drops', 'starboard']
         for channel in required_channels:
             if channel not in channels or not isinstance(channels[channel], int):
                 raise self.error.ConfigError(f"Missing or invalid 'guild.channels.{channel}'")
@@ -115,9 +113,11 @@ class ConfigHandler:
         xp = config.get('xp')
         if not xp:
             raise self.error.ConfigError("Missing 'xp' configuration")
+        
         rewards = xp.get('rewards')
         if not rewards or not isinstance(rewards, dict) or not rewards:
             raise self.error.ConfigError("Missing or invalid 'xp.rewards'")
+        
         for level, role in rewards.items():
             if not isinstance(level, str) or not level.isdigit():
                 raise self.error.ConfigError(f"Invalid reward level '{level}', must be a digit string")

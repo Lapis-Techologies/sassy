@@ -7,13 +7,13 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from utils import configloader
 
 
-__VERSION__ = "1.7.1"
+__VERSION__ = "1.7.2"
 
 class Sassy(commands.Bot):
     """
     Sassy the Sasquatch discord bot!!!!
     """
-    def __init__(self, config_handler, user_db, economy_db, starboard_db,  *args, **kwargs):
+    def __init__(self, bot_config, user_db, economy_db, starboard_db,  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.user_db = user_db
         self.economy_db = economy_db
@@ -21,7 +21,7 @@ class Sassy(commands.Bot):
         self.version = __VERSION__
         
         # normally this wouldnt be something we would want public, but in this case we will use it to help manage config accessing
-        self.config: configloader.ConfigHandler = config_handler
+        self.config: configloader.BotConfig = bot_config
         self.remove_command("help")
 
     async def on_ready(self):
@@ -71,18 +71,18 @@ class Sassy(commands.Bot):
 
 
 async def main() -> None:
-    config_handler = configloader.ConfigHandler()
-    await config_handler.set_config("config.json")
+    bot_config = configloader.BotConfig()
+    await bot_config.set_config("config.json")
 
     intents = discord.Intents.all()
-    token = await config_handler.get("bot", "token")
-    prefix = await config_handler.get("bot", "prefix")
+    token = await bot_config.get("bot", "token")
+    prefix = await bot_config.get("bot", "prefix")
     
-    is_dev = await config_handler.get("database", "dev")
+    is_dev = await bot_config.get("database", "dev")
     branch = "dev" if is_dev else "prod"
 
-    url = await config_handler.get("database", "url")
-    name = await config_handler.get("database", "name")
+    url = await bot_config.get("database", "url")
+    name = await bot_config.get("database", "name")
 
     mongo_client = AsyncIOMotorClient(url)
     collection_name = f"{name}-{branch}"
@@ -91,7 +91,7 @@ async def main() -> None:
     economy_db = database["economy"]
     starboard_db = database["starboard"]
 
-    bot = Sassy(command_prefix=prefix, intents=intents, config_handler=config_handler, user_db=user_db, economy_db=economy_db, starboard_db=starboard_db)
+    bot = Sassy(command_prefix=prefix, intents=intents, bot_config=bot_config, user_db=user_db, economy_db=economy_db, starboard_db=starboard_db)
     await bot.start(token)
     await bot.close()
 
