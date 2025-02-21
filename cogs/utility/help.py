@@ -2,6 +2,7 @@ import discord
 from typing import TYPE_CHECKING
 from discord.ext import commands
 from discord import app_commands, Interaction
+from utils.checks import db_check
 
 
 if TYPE_CHECKING:
@@ -14,6 +15,7 @@ class Help(commands.Cog):
 
     @app_commands.command(name="help", description="Get help on a command.")
     @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
+    @db_check()
     async def help(self, inter: Interaction):   # TODO: Use pages
         await inter.response.defer()
 

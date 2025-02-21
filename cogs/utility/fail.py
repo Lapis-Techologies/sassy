@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 from discord import app_commands, Interaction
 from discord.ext import commands
+from utils.checks import db_check, is_admin
 
 
 if TYPE_CHECKING:
@@ -13,18 +14,17 @@ class Fail(commands.Cog):
 
     @app_commands.command(name="fail", description="A command that always fails on purpose. Raises either Exception, OSError, or TypeError.")
     @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
-    async def fail(self, _: Interaction, exctype: str | None = None, message: str = "Failed Successfully."):
-        if exctype is None:
-            raise Exception(message)
-        
-        exctype = exctype.lower()
+    @db_check()
+    @is_admin()
+    async def fail(self, interaction: Interaction, message: str = "Failed Successfully."):
+        admin = interaction.guild.get_role(self.bot.config.get("guild", "roles", "admin"))
 
-        if exctype == "exception":
-            raise Exception(message)
-        elif exctype == "oserror":
-            raise OSError(message)
-        elif exctype == "typeerror":
-            raise TypeError(message)
+        if admin not in interaction.user.roles:
+            await interaction.response.send_message("You do not have permission!")
+            return
+
+        await interaction.response.send_message("Send Exception!")
+        raise Exception(message)
 
 
 async def setup(bot: 'Sassy'):

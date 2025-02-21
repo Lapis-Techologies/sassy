@@ -24,14 +24,17 @@ class Debug(commands.Cog):
             'LICENSE',
             'README.md',
             'config.json.example',
-            '.env.example'
+            '.env.example',
+            '.venv',
+            'dev',
+            *self.bot.IGNORE_COMMANDS
         )
 
 
     @commands.is_owner()
     @app_commands.command(name="debug", description="Gives some general information about the bots status")
     async def debug(self, inter: Interaction):
-        # type saftey
+        await inter.response.defer()
         if self.bot.user is None:
             return
         if self.bot.user.avatar is None:
@@ -44,7 +47,7 @@ class Debug(commands.Cog):
         version = self.bot.version
         guilds = len(self.bot.guilds)
         users = len(self.bot.users)
-        cmds = len([com for com in self.bot.tree.walk_commands() if isinstance(com, app_commands.Command)])  # TODO: Find a better way of doing this, lists are slow!
+        cmds = len([com for com in self.bot.tree.walk_commands() if isinstance(com, app_commands.Command)])
         pfp = self.bot.user.avatar.url or self.bot.user.display_avatar.url or self.bot.user.default_avatar.url
         stats = ProjectReader(banned=self.banned).project_stats().replace('-', '')
 
@@ -57,7 +60,7 @@ class Debug(commands.Cog):
         embed.add_field(name="Stats", value=stats)
         embed.set_thumbnail(url=pfp) if pfp is not None else None
 
-        await inter.response.send_message(embed=embed, ephemeral=True)
+        await inter.followup.send(embed=embed, ephemeral=True)
 
 
 async def setup(bot: 'Sassy'):

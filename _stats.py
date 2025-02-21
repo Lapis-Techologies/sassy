@@ -153,7 +153,9 @@ def main(debug: bool, path: str | None = None) -> None:
         '.gitattributes',
         '.gitmodules',
         'LICENSE',
-        'README.md'
+        'README.md',
+        '.venv',
+        'dev'
     )
 
     reader = ProjectReader(banned=banned, path=path or os.getcwd())

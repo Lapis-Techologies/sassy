@@ -1,34 +1,29 @@
 {
-    "database": {
-        "dev": ,
-        "url": "",
-        "name": ""
+  "database": {
+      "dev": ,
+      "url": "",
+      "name": ""
+  },
+  "bot": {
+      "token": "",
+      "prefix": "",
+      "starboard": ,
+  },
+  "guild": {
+    "id": ,
+    "roles": {
+      "admin": ,
+      "dev": # !REMOVE ME! Optional
     },
-    "bot": {
-        "token": "",
-        "prefix": "",
-        "starboard": ,
-        "ai": {
-          "enabled": ,
-          "character": ,
-          "token": 
-        }
-    },
-    "guild": {
-      "id": ,
-      "roles": {
-        "admin":
-      },
-      "channels": {
-        "welcome": ,
-        "logs": ,
-        "drops": ,
-        "starboard": ,
-        "ai": 
-      }
-    },
-    "xp": {
-      "rewards": {
-      }
+    "channels": {
+      "welcome": ,
+      "logs": ,
+      "drops": ,
+      "starboard": ,
+    }
+  },
+  "xp": {
+    "rewards": {
     }
   }
+}

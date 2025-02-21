@@ -4,8 +4,8 @@ from uuid import uuid4
 from typing import TYPE_CHECKING
 from discord import app_commands, Interaction, User
 from discord.ext import commands
-from utils.adduser import add
-from utils.log import log
+from utils.log import log, LogType
+from utils.checks import db_check, is_admin
 
 
 if TYPE_CHECKING:
@@ -16,37 +16,65 @@ class Mute(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
 
-    @app_commands.command(name="mute", description="Mutes a specified user for a specified amount of time.")
-    async def mute(self, inter: Interaction, user: discord.Member, days: int = 0, hours: int = 0, minutes: int = 0, reason: str = "No reason provided."):
-        await inter.response.defer()
-
+    async def add_mute(self, inter: Interaction, user: discord.Member, days: int, hours: int, minutes: int, reason: str = "No reason provided.") -> None:
+        case_id = str(uuid4())
         invoker = inter.user
-    
+
+        await self.bot.user_db.update_one({"uid": user.id}, {
+            "$push": {
+                "logs": {
+                    "case_id": case_id,
+                    "action": LogType.MUTE,
+                    "reason": reason,
+                    "moderator": invoker.id,
+                    "timestamp": datetime.datetime.now(datetime.UTC)
+                }
+            }
+        })
+
+        await log(self.bot, inter, LogType.MUTE, reason, [
+            {"name": "Time", "value": f"{days} Days, {hours} Hours, {minutes} Minutes", "inline": False},
+            {"name": "Case ID", "value": f"`{case_id}`", "inline": False}
+        ])
+
+    async def checks(self, inter: Interaction, user: discord.Member, days: int, hours: int, minutes: int) -> bool:
+        admin = inter.guild.get_role(self.bot.config.get("guild", "roles", "admin"))
+        invoker = inter.user
+        # Discord strangly forces max timeout time to be 28 days ?
+        total_time_seconds = (days * 86400) + (hours * 3600) + (minutes * 60)
         if isinstance(invoker, User):
-            return
-
-        admin = await self.bot.config.get("roles", "admin")
-
-        if not invoker.get_role(admin):
-            await inter.followup.send("You do not have permission to use this command!", ephemeral=True)
-            return
-        elif user.get_role(admin):
+            return False
+        elif admin in user.roles:
             await inter.followup.send("You cannot mute an admin!", ephemeral=True)
-            return
+            return False
         elif user == invoker:
             await inter.followup.send("You cannot mute yourself!", ephemeral=True)
-            return
+            return False
         elif user.id == self.bot.user.id:
             await inter.followup.send("hehe you can't mute me mate!", ephemeral=True)
-            return
+            return False
         elif user.is_timed_out():
             await inter.followup.send("This user is already muted!", ephemeral=True)
-            return
+            return False
         elif days == 0 and hours == 0 and minutes == 0:
             await inter.followup.send("You must specify a time to mute the user for!", ephemeral=True)
-            return
+            return False
+        elif total_time_seconds > 2419200:  # 28 days in seconds
+            await inter.followup.send("Sorry, maximum mute time is 28 days!")
+            return False
+        else:
+            return True
+
+    @app_commands.command(name="mute", description="Mutes a specified user for a specified amount of time.")
+    @db_check()
+    @is_admin()
+    async def mute(self, inter: Interaction, user: discord.Member, days: int = 0, hours: int = 0, minutes: int = 0, reason: str = "No reason provided.") -> None:
+        await inter.response.defer()
 
         time = (days * 86400) + (hours * 3600) + (minutes * 60)
+
+        if not await self.checks(inter, user, days, hours, minutes):
+            return
 
         await user.timeout(
             datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=time),
@@ -54,38 +82,7 @@ class Mute(commands.Cog):
         )
 
         await inter.followup.send(f"{user} has been muted for {days} days, {hours} hours, and {minutes} minutes for `{reason}`.", ephemeral=True)
-
-        case_id = str(uuid4())
-
-        curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"logs": 1})
-
-        if curs is None:
-            await add(bot=self.bot, member=user, logs=[
-                {
-                    "case_id": case_id,
-                    "action": "mute",
-                    "reason": reason,
-                    "moderator": invoker.id,
-                    "timestamp": datetime.datetime.now(datetime.UTC)
-                }
-            ])
-        else:
-            await self.bot.user_db.update_one({"uid": user.id}, {
-                "$push": {
-                    "logs": {
-                        "case_id": case_id,
-                        "action": "mute",
-                        "reason": reason,
-                        "moderator": invoker.id,
-                        "timestamp": datetime.datetime.now(datetime.UTC)
-                    }
-                }
-            })
-
-        await log(self.bot, inter, "mute", reason, [
-            {"name": "Time", "value": f"{days} Days, {hours} Hours, {minutes} Minutes", "inline": False},
-            {"name": "Case ID", "value": f"`{case_id}`", "inline": False}
-        ])
+        await self.add_mute(inter, user, days, hours, minutes, reason)
 
 
 async def setup(bot: "Sassy"):

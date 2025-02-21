@@ -1,8 +1,8 @@
 import random
 from typing import TYPE_CHECKING
-from discord import app_commands, Interaction
+from discord import Member, User, app_commands, Interaction
 from discord.ext import commands
-from utils.adduser import add
+from utils.checks import db_check
 
 
 if TYPE_CHECKING:
@@ -11,46 +11,42 @@ if TYPE_CHECKING:
 
 class Hunt(commands.Cog):
     def __init__(self, bot: "Sassy"):
-        self.bot = bot
-    
+        self.bot: "Sassy" = bot
+
+    def roll(self, range: int) -> int:
+        return random.randint(-range, range)
+
+    async def update(self, user: User | Member, offset: int) -> int:
+        curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"choomah_coins": 1})
+
+        new_bal = curs["choomah_coins"] + offset
+        new_bal = new_bal if new_bal >= 0 else 0
+
+        await self.bot.user_db.update_one({"uid": user.id}, {
+            "$set": {
+                "choomah_coins": new_bal
+            }
+        })
+
+        return new_bal
+
     @app_commands.command(name="hunt", description="Go hunting with sassy on choomah island")
     @app_commands.checks.cooldown(1, 30, key=lambda i: (i.guild_id, i.user.id))
-    async def hunt(self, inter: Interaction):
+    @db_check()
+    async def hunt(self, inter: Interaction) -> None:
         await inter.response.defer()
-        
+
         user = inter.user
 
-        curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"choomah_coins": 1})
-        
-        dice = random.randint(0, 2)
-
-        if dice == 0:
-            # Add
-            offset = random.randint(1, 15)
-            message = f"You goto choomah island and find {offset} choomah coins!"
-        elif dice == 1:
-            # Remove
-            offset = random.randint(-15, -1)
-            message = f"You goto choomah island and lose {abs(offset)} choomah coins!"
+        offset = self.roll(15)
+        if offset >= 0:
+            message = f"\\*You go to Choomah Island* You Found __**{offset}**__ Choomah Coins!"
         else:
-            # Nothing
-            offset = 0
-            message = "You found no coins!"
+            message = f"\\*You go to Choomah Island* You Lost __**{abs(offset)}**__ Choomah Coins."
 
-        if curs is None:
-            new_bal = offset if offset >= 0 else 0
-            await add(self.bot, user, choomah_coins=new_bal)
-        else:
-            new_bal = curs["choomah_coins"] + offset
-            new_bal = new_bal if new_bal >= 0 else 0
+        new_bal = await self.update(user, offset)
 
-            await self.bot.user_db.update_one({"uid": user.id}, {
-                "$set": {
-                    "choomah_coins": new_bal
-                }
-            })
-
-        await inter.followup.send(f"{message} Your balance is now **{new_bal}**.")
+        await inter.followup.send(f"{message}\nYour balance is now **{new_bal}**.")
 
 
 async def setup(bot):

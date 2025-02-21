@@ -5,7 +5,8 @@ from uuid import uuid4
 from discord.ext import commands
 from discord import app_commands, Interaction, User
 from utils.adduser import add
-from utils.log import log
+from utils.log import LogType, log
+from utils.checks import db_check, is_admin
 
 
 if TYPE_CHECKING:
@@ -16,34 +17,24 @@ class Warn(commands.Cog):
     def __init__(self, bot: 'Sassy'):
         self.bot = bot
 
-    @app_commands.command(name="warn", description="Warns a user.")
-    async def warn(self, inter: Interaction, user: discord.Member, reason: str = "No reason provided."):
-        await inter.response.defer()
+    async def checks(self, inter, user) -> bool:
+        admin = inter.guild.get_role(self.bot.config.get("guild", "roles", "admin"))
         invoker = inter.user
-
+        
         if isinstance(invoker, User):
-            return
-
-        admin = await self.bot.config.get("roles", "admin")
-
-        if not invoker.get_role(admin):
-            await inter.followup.send("You do not have permission to use this command!", emphemeral=True)
-            return
-
-        if user.get_role(admin):
+            return False
+        elif admin in user.roles:
             await inter.followup.send("You cannot warn an admin!", ephemeral=True)
-            return
-
-        if user == invoker:
+            return False
+        elif user == invoker:
             await inter.followup.send("You cannot warn yourself!", ephemeral=True)
-            return
-
-        if user.id == self.bot.user.id:
+            return False
+        elif user.id == self.bot.user.id:
             await inter.followup.send("hehe you can't warn me mate!", ephemeral=True)
-            return
+            return False
+        return True
 
-        case_id = str(uuid4())
-
+    async def add_warning(self, user, invoker, case_id, reason) -> None:
         curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"logs": 1})
 
         if curs is None:
@@ -53,7 +44,7 @@ class Warn(commands.Cog):
                 logs=[
                     {
                         "case_id": case_id,
-                        "action": "warn",
+                        "action": LogType.WARN,
                         "reason": reason,
                         "moderator": invoker.id,
                         "timestamp": datetime.datetime.now(datetime.UTC)
@@ -66,7 +57,7 @@ class Warn(commands.Cog):
                 "$push": {
                     "logs": {
                         "case_id": case_id,
-                        "action": "warn",
+                        "action": LogType.WARN,
                         "reason": reason,
                         "moderator": invoker.id,
                         "timestamp": datetime.datetime.now(datetime.UTC)
@@ -74,9 +65,23 @@ class Warn(commands.Cog):
                 }
             })
 
+    @app_commands.command(name="warn", description="Warns a user.")
+    @db_check()
+    @is_admin()
+    async def warn(self, inter: Interaction, user: discord.Member, reason: str = "No reason provided."):
+        await inter.response.defer()
+        invoker = inter.user
+
+        if not await self.checks(inter, user):
+            return
+
+        case_id = str(uuid4())
+
+        await self.add_warning(user, invoker, case_id, reason)
+
         await inter.followup.send(f"{user.mention} has been warned!", ephemeral=True)
 
-        await log(self.bot, inter, "warn", reason=reason, fields=[{"name": "Case ID", "value": f"`{case_id}`", "inline": False}])
+        await log(self.bot, inter, LogType.WARN, reason=reason, fields=[{"name": "Case ID", "value": f"`{case_id}`", "inline": False}])
 
 
 async def setup(bot: 'Sassy'):

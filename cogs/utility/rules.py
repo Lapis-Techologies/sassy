@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 from json import load
 from discord import Embed, app_commands, Interaction
 from discord.ext import commands
+from utils.checks import db_check
 
 
 if TYPE_CHECKING:
@@ -14,6 +15,7 @@ class Rules(commands.Cog):
 
     @app_commands.command(name="rules", description="Post the rules")
     @app_commands.checks.cooldown(1, 40, key=lambda i: (i.guild_id, i.user.id))
+    @db_check()
     async def ping(self, inter: Interaction):
         with open("./resources/rules.json", "r") as f:
             rules: list[dict[str, str]] = load(f)
