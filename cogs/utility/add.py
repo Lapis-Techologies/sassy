@@ -1,9 +1,10 @@
 import discord
 from typing import TYPE_CHECKING
 from discord.ext import commands
-from discord import app_commands, Interaction
-from utils.adduser import add as addd
-from utils.log import log
+from discord import User, app_commands, Interaction
+from utils.adduser import add as add_
+from utils.log import LogType, log
+from utils.checks import is_admin
 
 
 if TYPE_CHECKING:
@@ -15,12 +16,12 @@ class Add(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="add", description="Adds a user to the database.")
+    @is_admin()
     async def add(self, inter: Interaction, user: discord.Member):
         await inter.response.defer()
         invoker = inter.user
 
-        if not invoker.get_role(self.bot.config['roles']['admin'].id):
-            await inter.response.send_message("You do not have permission to use this command!")
+        if isinstance(invoker, User):
             return
 
         curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"uid": 1})
@@ -28,11 +29,11 @@ class Add(commands.Cog):
         if curs is not None:
             message = "User already exists in the database!"
         else:
-            await addd(bot=self.bot, member=user, logs=None)
+            await add_(bot=self.bot, member=user, logs=None)
 
-            await log(self.bot, inter, "Database Add", fields=[
-                {"name": f"Moderator", "value": f"{invoker.mention} (`{invoker.id}`)", "inline": False},
-                {"name": f"Member", "value": f"{user.mention} (`{user.id}`)", "inline": False}
+            await log(self.bot, inter, LogType.DATABASE_ADD, fields=[
+                {"name": "Moderator", "value": f"{invoker.mention} (`{invoker.id}`)", "inline": False},
+                {"name": "Member", "value": f"{user.mention} (`{user.id}`)", "inline": False}
             ])
 
             message = "User added to the database!"

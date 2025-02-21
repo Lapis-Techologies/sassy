@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 from random import choice
 from discord.ext import commands
 from discord import app_commands, Interaction
+from utils.checks import db_check
 
 
 if TYPE_CHECKING:
@@ -14,7 +15,8 @@ class Quote(commands.Cog):
 
     @app_commands.command(name="quote", description="You want some advice from me?")
     @app_commands.checks.cooldown(1, 10, key=lambda i: (i.guild_id, i.user.id))
-    async def quote(self, inter: Interaction):
+    @db_check()
+    async def quote(self, inter: Interaction) -> None:
         with open("./resources/quote.txt", "r") as f:
             quotes = f.readlines()
 

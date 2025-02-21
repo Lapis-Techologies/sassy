@@ -9,14 +9,13 @@
 <h4 align="center">wadiyatalkinabeet.</h4>
 
 <p align="center">
-    <img alt="Python Versions" src="https://img.shields.io/badge/Python-3.10 | 3.11 | 3.12-yellow">
+    <img alt="Python Versions" src="https://img.shields.io/badge/Python-3.13+-yellow">
     <img alt="Python Library" src="https://img.shields.io/badge/Library-discord.py-blue">
-    <img alt="Platforms" src="https://img.shields.io/badge/Platforms-Windows 10 | Linux (Debian)-green">
+    <img alt="Platforms" src="https://img.shields.io/badge/Platforms-Windows 10 | Windows 11 | Linux (Debian)-green">
     <img alt="PRs" src="https://img.shields.io/badge/PRs-welcome-green">
-    <img alt="Version" src="https://img.shields.io/badge/Version-1.7.0-green">
+    <img alt="Version" src="https://img.shields.io/badge/Version-2.0.0-green">
     <img alt="Stable" src="https://img.shields.io/badge/Status-Stable-green">
 </p>
-
 
 [//]: # (Quick Menu)
 
@@ -32,40 +31,39 @@
 
 # Overview
 
-Sassy the Discord bot is a general purpose bot themed around for the server [Sassy's Hang Out](https://discord.gg/HxFxPF3n25). It has just about everything you need to run a server and then some! The batteries are *not* included, you'll need to host the bot yourself. Sassy is designed to be robust, built to withstand errors, and elegantly handle user interactions.
+Sassy is a general-purpose Discord bot designed for the [Sassy's Hang Out](https://discord.gg/HxFxPF3n25) server. It offers nearly every feature you need to manage a server—and more! Note that you'll need to host the bot yourself. Sassy is built to handle errors gracefully and interact with users elegantly.
 
-[Setup](#setup) is fairly easy, you do not need to do much to get it started. 99% of all config will be done in `config.json`.
-
-
+Setup is simple, with almost all configuration done in `config.json`.
 
 # Setup
 
 ### Config Setup
 > [!WARNING]
-> **Do not** touch values within "database" yet, we will fill that out in a moment.
+> **Do not** modify values within "database" until instructed.
 
-1. Rename `config.json.example` -> `config.json`
-2. Fill in each key with the proper IDs
-
-> [!IMPORTANT]
-> Rewards is special. Follow the format `"level": id`. For example: `"5": 123321,`.
-
-### Database setup
+1. Rename `config.json.example` to `config.json`.
+2. Fill in each key with the correct IDs.
 
 > [!IMPORTANT]
-> Sassy uses [Mongodb](https://www.mongodb.com/) for it's database. Insure you have Mongodb installed correctly before proceeding.
+> For Rewards, use the format `"level": id` (e.g., `"5": 123321,`).
 
-1. Open `config.json`
-2. Set `dev` to true if you plan on developing for the bot, else set it to false
-3. `url` is the url to the database, for example `mongodb://localhost:27017/`
-4. `name` is the name of the database, for example `sassy`
+### Database Setup
 
-5. Create a database named `NAME-prod`, if you plan on developing on this bot, make a `NAME-dev` database too. For example, if your database was named `sassy` then you'd make `sassy-prod` database.
-6. Create 3 collections, the names are important, and need to be the same for both `prod` and `dev`
-    * `economy`
-    * `starboard`
-    * `user`
+> [!IMPORTANT]
+> Sassy uses [MongoDB](https://www.mongodb.com/) as its database. Ensure MongoDB is properly installed before proceeding.
 
+> [!IMPORTANT]
+> Steps 5 & 6 are optional but may be necessary depending on your setup.
+
+1. Open `config.json`.
+2. Set `dev` to `true` if developing the bot; otherwise, set it to `false`.
+3. Set `url` to your database URL (e.g., `mongodb://localhost:27017/`).
+4. Set `name` to your database name (e.g., `sassy`).
+5. Create a database named `NAME-prod`. If developing, also create a `NAME-dev` database (e.g., for `sassy`, create `sassy-prod` and `sassy-dev`).
+6. Create three collections in both databases with the following names:
+    - `economy`
+    - `starboard`
+    - `user`
 
 ### Example
 ```json
@@ -73,7 +71,7 @@ Sassy the Discord bot is a general purpose bot themed around for the server [Sas
     "database": {
         "dev": false,
         "url": "mongodb://localhost:27017/",
-        "name": "coolname" 
+        "name": "coolname"
     },
     "bot": {
         "token": "wowie.this.isaconfig",
@@ -81,28 +79,27 @@ Sassy the Discord bot is a general purpose bot themed around for the server [Sas
         "starboard": 5
     },
     "guild": {
-      "id": 90237802347890234,
-      "roles": {
-        "admin": 942340784235234
-      },
-      "channels": {
-        "welcome": 243978789423423,
-        "logs": 43978423978234897,
-        "drops": 2347634727946833,
-        "starboard": 2347897894632378493
-      }
+        "id": 1234567890,
+        "roles": {
+            "admin": 1234567890
+        },
+        "channels": {
+            "welcome": 1234567890,
+            "logs": 1234567890,
+            "drops": 1234567890,
+            "starboard": 1234567890
+        }
     },
     "xp": {
-      "rewards": {
-        "5": 2344232342347803443,
-        "10": 4308942378023482348,
-        "15": 2348742387234780234,
-        "20": 8974378943624234589
-      }
+        "rewards": {
+            "5": 1234567890,
+            "10": 1234567890,
+            "15": 1234567890,
+            "20": 1234567890
+        }
     }
 }
 ```
-
 
 # Join us!
 We would love to see you in the community, your contributions to community help fuel the development of Sassy the Discord Bot. New features are added constantly, so if you see an issue with the bot, or love The Big Lez show, consider joining our [little server](https://discord.gg/HxFxPF3n25).

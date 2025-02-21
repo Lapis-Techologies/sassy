@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from discord import app_commands, Interaction
 from discord.ext import commands
-from utils.adduser import add
+from utils.checks import db_check
 
 
 if TYPE_CHECKING:
@@ -9,24 +9,21 @@ if TYPE_CHECKING:
 
 
 class Bal(commands.Cog):
-    def __init__(self, bot: 'Sassy'):
-        self.bot: 'Sassy' = bot
+    def __init__(self, bot: "Sassy"):
+        self.bot = bot
 
-    @app_commands.command(name="bal", description="Check you balance")
+    @app_commands.command(name="bal", description="Check yer balance m8")
     @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
-    async def bal(self, inter: Interaction):
+    @db_check()
+    async def bal(self, inter: Interaction) -> None:
+        """
+        Check your balance
+        """
         user = inter.user
 
         curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"choomah_coins": 1})
 
-        if curs is None:
-            await add(bot=self.bot, member=user)
-            message = "You have **0** choomah coins!"
-        else:
-            balance = curs["choomah_coins"]
-            message = f"You have **{balance}** choomah coins!"
-
-        await inter.response.send_message(message)
+        await inter.response.send_message(f"You have **{curs["choomah_coins"]}** choomah coins!")
 
 
 async def setup(bot):

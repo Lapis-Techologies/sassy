@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from discord.ext import commands
 from discord import app_commands, Interaction
 from utils.adduser import add
+from utils.checks import is_admin, db_check
 
 
 if TYPE_CHECKING:
@@ -13,65 +14,69 @@ class UserInfo(commands.Cog):
     def __init__(self, bot: 'Sassy'):
         self.bot = bot
 
+    def make_embeds(self, logs, member, embed) -> list[discord.Embed]:
+        embeds = []
+
+        for log in logs:
+            if len(embed.fields) == 9:
+                embeds.append(embed)
+                embed = discord.Embed(
+                    title=f"User Information for {member} ({member.id}) - Continued",
+                    color=0x00FF00
+                )
+
+            case_id = log["case_id"]
+            action = log["action"]
+            reason = log["reason"]
+            moderator = log["moderator"]
+            timestamp = log["timestamp"].date()
+
+            embed.add_field(
+                name=f"Case ID: {case_id}",
+                value=f"Action: `{action}`\nReason: `{reason}`\nModerator: <@{moderator}>\nTimestamp: `{timestamp}`",
+                inline=False
+            )
+        
+        if embed not in embeds:
+            embeds.append(embed)
+
+        return embeds
+
     @app_commands.command(name="userinfo", description="View information about a specified user.")
+    @db_check()
+    @is_admin()
     async def userinfo(self, inter: Interaction, member: discord.Member):
-        await inter.response.defer()
-
-        invoker = inter.user
-
-        if not invoker.get_role(self.bot.config['roles']['admin'].id):
-            await inter.followup.send("You do not have permission to use this command!", ephemeral=True)
-            return
+        await inter.response.defer() 
 
         embed = discord.Embed(
             title=f"User Information for {member} ({member.id})",
-            color=discord.Color.green()
+            color=0x00FF00
         )
-
-        embed.set_thumbnail(url=member.avatar.url)
+        embed.set_thumbnail(url=member.avatar.url or member.default_avatar.url) if member.avatar is not None else None
 
         curs = await self.bot.user_db.find_one({"uid": member.id}, projection={"logs": 1})
 
         if curs is None:
-            await add(bot=self.bot, member=user)
+            await add(bot=self.bot, member=member)
 
             embed.add_field(name="Choomah Coins", value="0", inline=False)
             embed.add_field(name="Logs", value="No logs found for this user.", inline=False)
 
-            await inter.followup.send(embed=embed, ephemeral=True)
+            await inter.followup.send(embed=embed)
             return
 
-        embeds = [embed]
-
-        fields = 0  # Discord embeds have a limit of 25 fields, so we need to keep track of how many fields we've added.
         logs = curs["logs"]
-
         if len(logs) == 0:
             embed.add_field(name="Choomah Coins", value="0", inline=False)
             embed.add_field(name="Logs", value="No logs found for this user.", inline=False)
 
-            await inter.followup.send(embed=embed, ephemeral=True)
+            await inter.followup.send(embed=embed)
             return
 
-        for log in logs:
-            if fields == 25:
-                embeds.append(embed)
-                embed = discord.Embed(
-                    title=f"User Information for {member} ({member.id}) - Continued",
-                    color=discord.Color.green()
-                )
+        embeds = self.make_embeds(logs, member, embed)
 
-                fields = 0
-
-            embed.add_field(
-                name=f"Case ID: {log['case_id']}",
-                value=f"Action: {log['action']}\nReason: `{log['reason']}`\nModerator: <@{log['moderator']}>\nTimestamp: {log['timestamp'].date()}",
-                inline=False
-            )
-
-            fields += 1
-
-        await inter.followup.send(embeds=embeds, ephemeral=True)
+        for embed in embeds:
+            await inter.followup.send(embed=embed)
 
 
 async def setup(bot: 'Sassy'):
