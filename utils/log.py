@@ -78,7 +78,7 @@ async def log(bot: "Sassy", interaction: Interaction | None, action: LogType, re
     for field in fields:
         name = field["name"]
         value = field["value"]
-        inline = field["inline"]
+        inline = field.get("inline", False)
 
         embed.add_field(name=name, value=value, inline=inline)
 
