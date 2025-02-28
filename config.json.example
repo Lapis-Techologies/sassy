@@ -1,29 +1,37 @@
 {
   "database": {
-      "dev": ,
-      "url": "",
-      "name": ""
+    "dev": false,
+    "url": "mongodb://localhost:27017/",
+    "name": "coolname"
   },
   "bot": {
-      "token": "",
-      "prefix": "",
-      "starboard": ,
+    "token": "wowie.this.isaconfig",
+    "prefix": ".",
+    "starboard": 5
   },
   "guild": {
-    "id": ,
+    "id": 1234567890,
     "roles": {
-      "admin": ,
-      "dev": # !REMOVE ME! Optional
+      "admin": 1234567890,
+      "dev": 1234567890
     },
     "channels": {
-      "welcome": ,
-      "logs": ,
-      "drops": ,
-      "starboard": ,
+      "welcome": 1234567890,
+      "logs": 1234567890,
+      "drops": 1234567890,
+      "starboard": 1234567890,
+      "bump": {
+        "id": 1234567890,
+        "bot": 1234567890
+      }
     }
   },
   "xp": {
     "rewards": {
+      "5": 1234567890,
+      "10": 1234567890,
+      "15": 1234567890,
+      "20": 1234567890
     }
   }
 }
