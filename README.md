@@ -13,7 +13,7 @@
     <img alt="Python Library" src="https://img.shields.io/badge/Library-discord.py-blue">
     <img alt="Platforms" src="https://img.shields.io/badge/Platforms-Windows 10 | Windows 11 | Linux (Debian)-green">
     <img alt="PRs" src="https://img.shields.io/badge/PRs-welcome-green">
-    <img alt="Version" src="https://img.shields.io/badge/Version-2.0.0-green">
+    <img alt="Version" src="https://img.shields.io/badge/Version-2.1.0-green">
     <img alt="Stable" src="https://img.shields.io/badge/Status-Stable-green">
 </p>
 
@@ -68,36 +68,38 @@ Setup is simple, with almost all configuration done in `config.json`.
 ### Example
 ```json
 {
-    "database": {
-        "dev": false,
-        "url": "mongodb://localhost:27017/",
-        "name": "coolname"
+  "database": {
+    "dev": false,
+    "url": "mongodb://localhost:27017/",
+    "name": "coolname"
+  },
+  "bot": {
+    "token": "wowie.this.isaconfig",
+    "prefix": ".",
+    "starboard": 5
+  },
+  "guild": {
+    "id": 1234567890,
+    "roles": {
+      "admin": 1234567890,
+      "dev": 1234567890
     },
-    "bot": {
-        "token": "wowie.this.isaconfig",
-        "prefix": "?",
-        "starboard": 5
-    },
-    "guild": {
+    "channels": {
+      "welcome": 1234567890,
+      "logs": 1234567890,
+      "drops": 1234567890,
+      "starboard": 1234567890,
+      "bump": {
         "id": 1234567890,
-        "roles": {
-            "admin": 1234567890
-        },
-        "channels": {
-            "welcome": 1234567890,
-            "logs": 1234567890,
-            "drops": 1234567890,
-            "starboard": 1234567890
-        }
-    },
-    "xp": {
-        "rewards": {
-            "5": 1234567890,
-            "10": 1234567890,
-            "15": 1234567890,
-            "20": 1234567890
-        }
+        "bot": 1234567890
+      }
     }
+  },
+  "xp": {
+    "rewards": {
+      "5": 1234567890
+    }
+  }
 }
 ```
 

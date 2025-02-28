@@ -63,6 +63,7 @@ def main() -> None:
     parser.add_argument("-p", "--patch", type=bool, action=BooleanOptionalAction, default=False)
     parser.add_argument("-q", "--quiet", type=bool, action=BooleanOptionalAction, default=False)
 
+
     args = parser.parse_args()
 
     version = variable_check(load_version())

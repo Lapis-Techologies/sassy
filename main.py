@@ -9,6 +9,7 @@ from discord.enums import ActivityType
 from discord.ext import commands
 from motor.motor_asyncio import AsyncIOMotorClient
 from utils import configloader
+from repl import REPL
 
 
 class Sassy(commands.Bot):
@@ -24,12 +25,21 @@ class Sassy(commands.Bot):
         self.IGNORE_COMMANDS = []
         self.config: configloader.BotConfig = bot_config
         self.version = get_version()
+        self.repl = REPL(self)
         self.remove_command("help")
+
+    def reload_config(self) -> None:
+        self.config.set_config("config.json")
 
     async def on_ready(self):
         await self.load_cogs()
 
-        synced = len(await self.tree.sync())
+        guild = self.get_guild(int(self.config.get("guild", "id")))
+        if guild is None:
+            print("Cannot find guild! Check your config file!")
+            sys.exit(1)
+        self.tree.copy_global_to(guild=guild)  # https://stackoverflow.com/a/75236448/19119462
+        synced = len(await self.tree.sync(guild=guild))
         print(f"Synced {synced} commands!")
 
         if self.user is None:
@@ -38,20 +48,24 @@ class Sassy(commands.Bot):
 
         print(f"Logged in as {self.user.name} ({self.user.id})")
 
+        print(f"Now version {self.version} 🎉")
+
         await self.change_presence(status=None, activity=Activity(type=ActivityType.listening, name=f"Now Version {self.version}!"))
+
+        await self.loop.create_task(self.repl.run())
 
     async def load_cogs(self):
         if not os.path.exists("./cogs"):
             raise OSError("You need a cogs folder!")
 
-        cogs = pathlib.Path(os.path.join(os.getcwd(), "cogs"))
+        cogs = pathlib.Path(os.getcwd()).joinpath("cogs")
 
         if cogs.is_file():
             raise OSError("'cogs' should be a folder/directory, not a file!")
 
         print(f"{'=' * 10} COGS {'=' * 10}")
         await self._process_folder(cogs, 'cogs')
-        print("=" * 26)
+        print('=' * 26)
 
     async def _process_folder(self, path: pathlib.Path, path_start: str):
         banned = (
@@ -70,6 +84,7 @@ class Sassy(commands.Bot):
                     continue
 
                 module = f"{path_start}.{item.stem}"
+
                 try:
                     await self.load_extension(module)
                     print(f"Loaded {module}")
@@ -78,7 +93,7 @@ class Sassy(commands.Bot):
 
 
 def get_version() -> str:
-    return str(check_output(["python", "bumper.py", "-q"]), encoding='utf-8')
+    return str(check_output(["python", "bumper.py", "-q"]).strip(), encoding='utf-8')
 
 
 async def main() -> None:

@@ -16,10 +16,14 @@ class Hunt(commands.Cog):
     def roll(self, range: int) -> int:
         return random.randint(-range, range)
 
-    async def update(self, user: User | Member, offset: int) -> int:
+    async def update(self, user: User | Member, offset: int) -> tuple[int, int]:
         curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"choomah_coins": 1})
 
         new_bal = curs["choomah_coins"] + offset
+        if new_bal < 0:
+            difference = curs["choomah_coins"]
+        else:
+            difference = offset
         new_bal = new_bal if new_bal >= 0 else 0
 
         await self.bot.user_db.update_one({"uid": user.id}, {
@@ -28,7 +32,7 @@ class Hunt(commands.Cog):
             }
         })
 
-        return new_bal
+        return new_bal, difference
 
     @app_commands.command(name="hunt", description="Go hunting with sassy on choomah island")
     @app_commands.checks.cooldown(1, 30, key=lambda i: (i.guild_id, i.user.id))
@@ -39,12 +43,13 @@ class Hunt(commands.Cog):
         user = inter.user
 
         offset = self.roll(15)
-        if offset >= 0:
-            message = f"\\*You go to Choomah Island* You Found __**{offset}**__ Choomah Coins!"
-        else:
-            message = f"\\*You go to Choomah Island* You Lost __**{abs(offset)}**__ Choomah Coins."
+        new_bal, diff = await self.update(user, offset)
 
-        new_bal = await self.update(user, offset)
+        if offset >= 0:
+            message = f"\\*You go to Choomah Island* You Found __**{diff}**__ Choomah Coins!"
+        else:
+            message = f"\\*You go to Choomah Island* You Lost __**{abs(diff)}**__ Choomah Coins."
+
 
         await inter.followup.send(f"{message}\nYour balance is now **{new_bal}**.")
 

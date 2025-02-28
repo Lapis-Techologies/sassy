@@ -3,6 +3,7 @@ import pathlib
 import discord
 from time import time
 from typing import TYPE_CHECKING
+from asyncio import sleep
 from discord.ext import commands
 from discord import app_commands, Interaction
 from utils.dpaste import upload
@@ -85,6 +86,24 @@ class Events(commands.Cog):
 
             await inter.response.send_message(message, ephemeral=True)
 
+    async def handle_bump(self, message: discord.Message) -> None:
+        await sleep(0.5)  # Allow the embed to load...
+        channel = message.channel
+
+        bump_channel = int(self.bot.config.get("guild", "channels", "bump"))
+
+        if channel.id != bump_channel:
+            return
+        elif not message.embeds or len(message.embeds) != 1:
+            return
+
+        embed = message.embeds[0]
+
+        if "Bump done!" in embed.description:
+            await sleep(7200)  # 2 Hours
+            await channel.send(f"{message.interaction_metadata.user.mention} Time to bump you fucken druggah")
+            await channel.send("https://media1.tenor.com/m/rUUFSwPj-FMAAAAC/tbls-sassy.gif")
+
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
         welcome_channel = self.bot.get_channel(self.bot.config.get("guild", "channels", "welcome"))
@@ -104,8 +123,8 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
-        if message.author.bot:
-            return
+        if message.author.id == int(self.bot.config.get("channels", "bump", "bot")):
+            await self.handle_bump(message)
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
