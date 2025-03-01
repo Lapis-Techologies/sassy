@@ -123,7 +123,7 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
-        if message.author.id == int(self.bot.config.get("channels", "bump", "bot")):
+        if message.author.id == int(self.bot.config.get("guild", "channels", "bump", "bot")):
             await self.handle_bump(message)
 
     @commands.Cog.listener()

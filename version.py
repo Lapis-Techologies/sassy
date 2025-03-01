@@ -3,4 +3,4 @@
 
 MAJOR = 2
 MINOR = 1
-PATCH = 0
+PATCH = 1
