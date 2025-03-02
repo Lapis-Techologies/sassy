@@ -4,6 +4,28 @@ from typing import Protocol
 from argparse import ArgumentParser, BooleanOptionalAction
 
 
+def update_markdown(version: str) -> None:
+    with open("README.md", "r") as readme:
+        lines = readme.readlines()
+
+    new_line = f'    <img alt="Version" src="https://img.shields.io/badge/Version-{version}-green">\n'
+    found = False
+    line_count = 0
+    for line in lines:
+        line_count += 1
+        if '<img alt="Version' in line:
+            found = True
+            break
+
+    if found:
+        lines[line_count - 1] = new_line
+        
+        with open("README.md", "w") as readme:
+            readme.writelines(lines)
+    else:
+        print("[-] Couldn't find version tag inside readme file!")
+
+
 def load_version() -> Protocol:
     """
     Load the version file to work on it
@@ -74,14 +96,15 @@ def main() -> None:
             return
 
         print(f'Sassy Bot Version {'.'.join(str(num) for num in version)}')
-        print('Did not edit version.')
         return
-    
+
     new_version = update_version([int(args.major), int(args.minor), int(args.patch)], version)
+    new_version_format = '.'.join(str(num) for num in new_version)
 
     write(new_version)
-    print(f'Sassy bot Version {'.'.join(str(num) for num in new_version)}')
-    print(f'Updated, {''.join(['Major, ' if args.major else '', 'Minor, ' if args.minor else '', 'Patch ' if args.patch else ''])}Versions.')
+    update_markdown(new_version_format)
+    print(f'Sassy Bot Version {new_version_format}')
+    print(f'Updated {''.join(['Major, ' if args.major else '', 'Minor, ' if args.minor else '', 'Patch ' if args.patch else ''])}Versions.')
 
 
 if __name__ == "__main__":

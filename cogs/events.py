@@ -104,6 +104,45 @@ class Events(commands.Cog):
             await channel.send(f"{message.interaction_metadata.user.mention} Time to bump you fucken druggah")
             await channel.send("https://media1.tenor.com/m/rUUFSwPj-FMAAAAC/tbls-sassy.gif")
 
+    async def handle_reaction_event(self, payload: discord.RawReactionActionEvent, remove: bool = False) -> None:
+        guild_id = payload.guild_id
+
+        if guild_id is None:
+            return  # Ignore DMs
+
+        reaction_message_id = int(self.bot.config.get("guild", "roles", "reactions", "message"))
+        if payload.message_id != reaction_message_id:
+            return
+
+        emoji: str = str(payload.emoji.id) if payload.emoji.id else payload.emoji.name
+        roles = self.bot.config.get("guild", "roles", "reactions")
+        role_id = roles.get(emoji, None)
+
+        if role_id is None:
+            return
+
+        guild = self.bot.get_guild(guild_id)
+        if guild is None:
+            return
+
+        role = guild.get_role(role_id)
+        if role is None:
+            return  # Role not found
+
+        try:
+            member = await guild.fetch_member(payload.user_id)
+        except discord.NotFound:
+            return  # Member not in guild
+
+        if remove:
+            if role not in member.roles:
+                return
+        else:
+            if role in member.roles:
+                return
+
+        await member.remove_roles(role) if remove else await member.add_roles(role)
+
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
         welcome_channel = self.bot.get_channel(self.bot.config.get("guild", "channels", "welcome"))
@@ -151,6 +190,14 @@ class Events(commands.Cog):
             {"name": "Content", "value": f"```{message.content}```", "inline": False},
             {"name": "Channel", "value": f"{message.jump_url}", "inline": False},
         ])
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+        await self.handle_reaction_event(payload, False)
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent) -> None:
+        await self.handle_reaction_event(payload, True)
 
 
 async def setup(bot):
