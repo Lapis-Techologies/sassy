@@ -152,6 +152,67 @@ class Events(commands.Cog):
             {"name": "Channel", "value": f"{message.jump_url}", "inline": False},
         ])
 
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+        guild_id = payload.guild_id
+
+        if guild_id is None:
+            return # DMs
+
+        reaction_message_id = int(self.bot.config.get("guild", "roles", "reactions", "message"))
+        if payload.message_id != reaction_message_id:
+            return
+
+        emoji: str = str(payload.emoji.id) if payload.emoji.id else payload.emoji.name
+        roles = self.bot.config.get("guild", "roles", "reactions")
+        role = roles.get(emoji, None)
+
+        if role is None:
+            return
+
+        role = self.bot.get_guild(payload.guild_id).get_role(role)
+
+        if role in payload.member.roles:
+            return
+        
+        await payload.member.add_roles(role)
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent) -> None:
+        guild_id = payload.guild_id
+
+        if guild_id is None:
+            return  # Ignore DMs
+
+        reaction_message_id = int(self.bot.config.get("guild", "roles", "reactions", "message"))
+        if payload.message_id != reaction_message_id:
+            return
+
+        emoji: str = str(payload.emoji.id) if payload.emoji.id else payload.emoji.name
+        roles = self.bot.config.get("guild", "roles", "reactions")
+        role_id = roles.get(emoji, None)
+
+        if role_id is None:
+            return
+
+        guild = self.bot.get_guild(guild_id)
+        if guild is None:
+            return
+
+        role = guild.get_role(role_id)
+        if role is None:
+            return  # Role not found
+
+        try:
+            member = await guild.fetch_member(payload.user_id)
+        except discord.NotFound:
+            return  # Member not in guild
+
+        if role not in member.roles:
+            return
+
+        await member.remove_roles(role)
+
 
 async def setup(bot):
     await bot.add_cog(Events(bot))

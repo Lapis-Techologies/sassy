@@ -22,11 +22,8 @@ class ConfigHandler:
 
     def get(self, *args) -> Any:
         result = self._config
-        try:
-            for arg in args:
-                result = result[arg]
-        except KeyError:
-            return None
+        for arg in args:
+            result = result[arg]
         return result
 
     def set(self, *args, value: Any) -> None:
