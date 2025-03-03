@@ -87,10 +87,10 @@ class Events(commands.Cog):
             await inter.response.send_message(message, ephemeral=True)
 
     async def handle_bump(self, message: discord.Message) -> None:
-        await sleep(0.5)  # Allow the embed to load...
+        await sleep(1)  # Allow the embed to load...
         channel = message.channel
 
-        bump_channel = int(self.bot.config.get("guild", "channels", "bump"))
+        bump_channel = self.bot.config.get("guild", "channels", "bump", "id")
 
         if channel.id != bump_channel:
             return
@@ -99,10 +99,13 @@ class Events(commands.Cog):
 
         embed = message.embeds[0]
 
-        if "Bump done!" in embed.description:
-            await sleep(7200)  # 2 Hours
-            await channel.send(f"{message.interaction_metadata.user.mention} Time to bump you fucken druggah")
-            await channel.send("https://media1.tenor.com/m/rUUFSwPj-FMAAAAC/tbls-sassy.gif")
+        if embed.description and "Bump done! :thumbsup:" in embed.description:
+            await self.bot.loop.create_task(self.bump_task(channel, message))
+
+    async def bump_task(self, channel, message) -> None:
+        await sleep(5 if self.bot.config.get("database", "dev") else 7200)  # 5 seconds if developing else 2 hours.
+        await channel.send(f"{message.interaction_metadata.user.mention} Time to bump you fucken druggah")
+        await channel.send("https://media1.tenor.com/m/rUUFSwPj-FMAAAAC/tbls-sassy.gif")
 
     async def handle_reaction_event(self, payload: discord.RawReactionActionEvent, remove: bool = False) -> None:
         guild_id = payload.guild_id
@@ -162,8 +165,9 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
-        if message.author.id == int(self.bot.config.get("guild", "channels", "bump", "bot")):
-            await self.handle_bump(message)
+        if message.interaction_metadata:
+            if message.author.id == int(self.bot.config.get("guild", "channels", "bump", "bot")):
+                await self.handle_bump(message)
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:

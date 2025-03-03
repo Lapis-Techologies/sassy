@@ -13,7 +13,7 @@
     <img alt="Python Library" src="https://img.shields.io/badge/Library-discord.py-blue">
     <img alt="Platforms" src="https://img.shields.io/badge/Platforms-Windows 10 | Windows 11 | Linux (Debian)-green">
     <img alt="PRs" src="https://img.shields.io/badge/PRs-welcome-green">
-    <img alt="Version" src="https://img.shields.io/badge/Version-2.2.1-green">
+    <img alt="Version" src="https://img.shields.io/badge/Version-2.2.2-green">
     <img alt="Stable" src="https://img.shields.io/badge/Status-Unstable-red">
 </p>
 
@@ -82,7 +82,12 @@ Setup is simple, with almost all configuration done in `config.json`.
     "id": 1234567890,
     "roles": {
       "admin": 1234567890,
-      "dev": 1234567890
+      "dev": 1234567890,
+      "reactions": {
+        "message": 1234567890,
+        "rofl": 1234567890,
+        "1234567890": 1234567890
+      }
     },
     "channels": {
       "welcome": 1234567890,
@@ -97,7 +102,10 @@ Setup is simple, with almost all configuration done in `config.json`.
   },
   "xp": {
     "rewards": {
-      "5": 1234567890
+      "5": 1234567890,
+      "10": 1234567890,
+      "15": 1234567890,
+      "20": 1234567890
     }
   }
 }
