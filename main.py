@@ -8,7 +8,7 @@ from discord import Activity
 from discord.enums import ActivityType
 from discord.ext import commands
 from motor.motor_asyncio import AsyncIOMotorClient
-from utils import configloader
+from config import botconfig
 from repl import REPL
 
 
@@ -21,9 +21,9 @@ class Sassy(commands.Bot):
         self.user_db = user_db
         self.economy_db = economy_db
         self.starboard_db = starboard_db
-        self.verbose = verbose
+        self.verbose = verbose 
         self.IGNORE_COMMANDS = []
-        self.config: configloader.BotConfig = bot_config
+        self.config: botconfig.BotConfig = bot_config
         self.version = get_version()
         self.repl = REPL(self)
         self.remove_command("help")
@@ -97,7 +97,7 @@ def get_version() -> str:
 
 
 async def main() -> None:
-    bot_config = configloader.BotConfig()
+    bot_config = botconfig.BotConfig()
     bot_config.set_config("config.json")
 
     intents = discord.Intents.all()
