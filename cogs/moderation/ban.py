@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from uuid import uuid4
 from discord.ext import commands
 from discord import User, app_commands, Interaction
-from utils.log import log, LogType
+from utils.log import log, LogType, Field
 from utils.checks import db_check, is_admin
 
 
@@ -31,7 +31,7 @@ class Ban(commands.Cog):
             }
         })
 
-        await log(self.bot, inter, LogType.BAN, reason, fields=[{"name": "Case ID", "value": f"`{case_id}`", "inline": False}])
+        await log(self.bot, inter, LogType.BAN, reason, fields=[Field("Case ID", f"`{case_id}", False)])
 
     async def check(self, inter, invoker, user) -> bool:
         admin = self.bot.config.get("guild", "roles", "admin")

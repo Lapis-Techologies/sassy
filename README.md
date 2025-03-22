@@ -9,11 +9,11 @@
 <h4 align="center">wadiyatalkinabeet.</h4>
 
 <p align="center">
-    <img alt="Python Versions" src="https://img.shields.io/badge/Python-3.13+-yellow">
+    <img alt="Python Versions" src="https://img.shields.io/badge/Python-3.12+-yellow">
     <img alt="Python Library" src="https://img.shields.io/badge/Library-discord.py-blue">
     <img alt="Platforms" src="https://img.shields.io/badge/Platforms-Windows 10 | Windows 11 | Linux (Debian)-green">
     <img alt="PRs" src="https://img.shields.io/badge/PRs-welcome-green">
-    <img alt="Version" src="https://img.shields.io/badge/Version-2.2.2-green">
+    <img alt="Version" src="https://img.shields.io/badge/Version-2.3.1-green">
     <img alt="Stable" src="https://img.shields.io/badge/Status-Unstable-red">
 </p>
 

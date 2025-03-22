@@ -8,8 +8,7 @@ from discord.ext import commands
 from discord import app_commands, Interaction
 from utils.dpaste import upload
 from utils.adduser import add
-from utils.log import log, Importancy, LogType
-
+from utils.log import log, Importancy, LogType, Field
 
 if TYPE_CHECKING:
     from main import Sassy
@@ -54,37 +53,58 @@ class Events(commands.Cog):
 
         return file_name, line, command, params, tb
 
-    async def on_slash_error(self, inter: Interaction, error: app_commands.AppCommandError) -> None:    # noqa
-        if isinstance(error, app_commands.CommandNotFound):
-            await inter.response.send_message("Command not found!")
-        elif isinstance(error, app_commands.CommandOnCooldown):
-            time_left = int(error.cooldown.get_retry_after())
-            length = int(time()) + time_left
-            formatted_time = f"<t:{length}:R>"
+    async def command_not_found(self, inter, _) -> None:
+        await inter.response.send_message("Command not found!")
 
-            await inter.response.send_message(f"Command is on cooldown! (Ends {formatted_time})")
-        elif isinstance(error, app_commands.CheckFailure):
-            await inter.response.send_message("You do not have permission to use this command!")
-        else:
-            file_name, line, command, params, tb = await self.handle_error(inter, error)
-            url = await upload(tb)
+    async def check_failure(self, inter, _) -> None:
+        await inter.response.send_message("You do not have permission to use this command!")
 
-            message = f"I'm sorry mate, the choomahs are coming back, I can't do that right now. I've noted it down and will look into it. (Ran into error {type(error).__name__})"
+    async def command_on_cooldown(self, inter, error) -> None:
+        time_left = int(error.cooldown.get_retry_after())
+        length = int(time()) + time_left
+        formatted_time = f"<t:{length}:R>"
 
-            goto_url = discord.ui.Button(label="Traceback", style=discord.ButtonStyle.link, url=url)
+        await inter.response.send_message(f"Command is on cooldown! (Ends {formatted_time})")
+
+    async def error_out(self, inter, error) -> None:
+        file_name, line, command, params, tb = await self.handle_error(inter, error)
+
+        if command == 'fail':
+            goto_url = discord.ui.Button(label="Traceback", style=discord.ButtonStyle.link, disabled=True, url="https://discord.com/invite/HxFxPF3n25")
             view = discord.ui.view.View()
             view.add_item(goto_url)
             await log(self.bot, inter, LogType.ERROR, None, [
-                {
-                    "name": "Error",
-                    "value": f"```File: {file_name}\nLine: {line}\nCommand: {command}\nParameters: {params}```",
-                    "inline": False
-                },
+                Field("Error", f"```File: {file_name}\nLine: {line}\nCommand: {command}\nParameters: {params}```",
+                      False)
             ],
-                      Importancy.HIGH,
+                      Importancy.LOW,
                       view)
+            return
 
-            await inter.response.send_message(message, ephemeral=True)
+        url = await upload(tb)
+
+        message = f"I'm sorry mate, the choomahs are coming back, I can't do that right now. I've noted it down and will look into it. (Ran into error {type(error).__name__})"
+
+        goto_url = discord.ui.Button(label="Traceback", style=discord.ButtonStyle.link, url=url)
+        view = discord.ui.view.View()
+        view.add_item(goto_url)
+        await log(self.bot, inter, LogType.ERROR, None, [
+            Field("Error", f"```File: {file_name}\nLine: {line}\nCommand: {command}\nParameters: {params}```", False)
+        ],
+                  Importancy.HIGH,
+                  view)
+
+        await inter.response.send_message(message, ephemeral=True)
+
+    async def on_slash_error(self, inter: Interaction, error: app_commands.AppCommandError) -> None:    # noqa
+        errors = {
+            app_commands.CommandNotFound: self.command_not_found,
+            app_commands.CommandOnCooldown: self.command_on_cooldown,
+            app_commands.CheckFailure: self.check_failure
+        }
+
+        callback = errors.get(type(error), self.error_out)
+        await callback(inter, error)
 
     async def handle_bump(self, message: discord.Message) -> None:
         await sleep(1)  # Allow the embed to load...
@@ -103,6 +123,7 @@ class Events(commands.Cog):
             await self.bot.loop.create_task(self.bump_task(channel, message))
 
     async def bump_task(self, channel, message) -> None:
+
         await sleep(5 if self.bot.config.get("database", "dev") else 7200)  # 5 seconds if developing else 2 hours.
         await channel.send(f"{message.interaction_metadata.user.mention} Time to bump you fucken druggah")
         await channel.send("https://media1.tenor.com/m/rUUFSwPj-FMAAAAC/tbls-sassy.gif")
@@ -158,9 +179,9 @@ class Events(commands.Cog):
 
         await add(bot=self.bot, member=member)
         await log(self.bot, None, LogType.JOIN, fields=[
-            {"name": "User", "value": member.name},
-            {"name": "ID", "value": member.id},
-            {"name": "Mention", "value": member.mention}
+            Field("User", member.name),
+            Field("ID", member.id),
+            Field("Mention", member.mention)
         ])
 
     @commands.Cog.listener()
@@ -173,26 +194,28 @@ class Events(commands.Cog):
     async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
         if before.author.bot:
             return
+        # Ignore discord content servers
+        elif before.content == after.content:
+            return
 
         await log(self.bot, None, LogType.MESSAGE_EDIT, fields=[
-            {"name": "User", "value": f"{before.author.mention} (`{before.author.id}`)", "inline": False},
-            {"name": "Before", "value": f"```{before.content}```", "inline": False},
-            {"name": "After", "value": f"```{after.content}```", "inline": False},
-            {"name": "Jump Link", "value": after.jump_url, "inline": False}
+            Field("User", f"{before.author.mention}", False),
+            Field("Before", f"```{before.content}```" if before.content else "!!No Content.!!", False),
+            Field("After", f"```{after.content}```", False),
+            Field("Jump Link", after.jump_url, False)
         ])
 
     @commands.Cog.listener()
-    async def on_message_delete(self, message: discord.Message) -> None:
-        if message.author.bot:
+    async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent) -> None:
+        if payload.cached_message.author.bot:
             return
-
-        if isinstance(message.channel, (discord.DMChannel, discord.GroupChannel)):
+        elif isinstance(payload.cached_message.channel, (discord.DMChannel, discord.GroupChannel)):
             return
 
         await log(self.bot, None, LogType.MESSAGE_DELETE, fields=[
-            {"name": "User", "value": f"{message.author.mention} (`{message.author.id}`)", "inline": False},
-            {"name": "Content", "value": f"```{message.content}```", "inline": False},
-            {"name": "Channel", "value": f"{message.jump_url}", "inline": False},
+            Field("User", f"{payload.cached_message.author.mention} (`{payload.cached_message.author.id}`)", False),
+            Field("Content", f"```{payload.cached_message.content}```" if payload.cached_message.content else "!!No Content.!!", False),
+            Field("Channel", payload.cached_message.channel.jump_url, False)
         ])
 
     @commands.Cog.listener()

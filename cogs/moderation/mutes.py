@@ -49,7 +49,7 @@ class Mutes(commands.Cog):
         users = await self.bot.user_db.aggregate(pipeline).to_list(None)
         cases = [log for user in users for log in user.get("logs", [])]
 
-        if cases == []:
+        if not cases:
             embed = discord.Embed(title="No Mutes Found", description=f"{member.mention} does not have any mutes on record!", color=0x00FF00)
             await interaction.followup.send(embed=embed)
             return

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from discord.ext import commands
 from discord import app_commands, Interaction, User
 from utils.adduser import add
-from utils.log import LogType, log
+from utils.log import LogType, log, Field
 from utils.checks import db_check, is_admin
 
 
@@ -53,7 +53,7 @@ class RWarn(commands.Cog):
             )
             await inter.followup.send("Removed Warning!")
 
-        await log(self.bot, inter, LogType.REMOVE_WARN, fields=[{"name": "Case ID", "value": f"`{case_id}`", "inline": False}])
+        await log(self.bot, inter, LogType.REMOVE_WARN, fields=[Field("Case ID", f"`{case_id}`", False)])
 
 
 async def setup(bot: 'Sassy'):
