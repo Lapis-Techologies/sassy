@@ -80,13 +80,14 @@ class SchemaValidator:
                 elif isinstance(validator, tuple) and len(validator) == 2 and callable(validator[0]):
                     if not SchemaValidator.is_dict(val):
                         errors.append(f"Expected dictionary for '{current_path}', got {type(val).__name__}")
-                    else:
-                        for k, v in val.items():
-                            if not validator[0](k):
-                                key_type = validator[0].__name__.replace("is_", "")
-                                errors.append(f"Expected {key_type} for key in '{current_path}', got {type(k).__name__}")
-                            if not validator[1](v):
-                                val_type = validator[1].__name__.replace("is_", "")
-                                errors.append(f"Expected {val_type} for value at '{current_path}.{k}', got {type(v).__name__}")
+                        continue
+                    
+                    for k, v in val.items():
+                        if not validator[0](k):
+                            key_type = validator[0].__name__.replace("is_", "")
+                            errors.append(f"Expected {key_type} for key in '{current_path}', got {type(k).__name__}")
+                        if not validator[1](v):
+                            val_type = validator[1].__name__.replace("is_", "")
+                            errors.append(f"Expected {val_type} for value at '{current_path}.{k}', got {type(v).__name__}")
         
         return errors

@@ -1,5 +1,6 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Any
 from enum import Enum, StrEnum
+from dataclasses import dataclass
 from discord import Embed, TextChannel, Interaction, ui
 
 
@@ -28,7 +29,17 @@ class LogType(StrEnum):
     MESSAGE_DELETE = "message delete"
 
 
-async def log(bot: "Sassy", interaction: Interaction | None, action: LogType, reason: str | None = None, fields: List | None = None, importancy: Importancy = Importancy.MEDIUM, view: ui.view.View | None = None):
+@dataclass()
+class Field:
+    name: str
+    value: Any
+    inline: bool = True
+
+    def dict(self) -> dict:
+        return {"name": self.name, "value": self.value, "inline": self.inline}
+
+
+async def log(bot: "Sassy", interaction: Interaction | None, action: LogType, reason: str | None = None, fields: List[Field] | None | List[dict[str, str | bool]] = None, importancy: Importancy = Importancy.MEDIUM, view: ui.view.View | None = None):
     """
     Helper function to add logs to the log channel
     :param bot:
@@ -36,6 +47,8 @@ async def log(bot: "Sassy", interaction: Interaction | None, action: LogType, re
     :param action:
     :param reason:
     :param fields:
+    :param importancy:
+    :param view:
     :return:
     """
     if fields is None:
@@ -76,9 +89,16 @@ async def log(bot: "Sassy", interaction: Interaction | None, action: LogType, re
             embed.add_field(name="Reason", value=f"```{reason}```", inline=False)
 
     for field in fields:
-        name = field["name"]
-        value = field["value"]
-        inline = field.get("inline", False)
+        if isinstance(field, Field):
+            name = field.name
+            value = field.value
+            inline = field.inline
+        elif isinstance(field, dict):
+            name = field["name"]
+            value = field["value"]
+            inline = field.get("inline", False)
+        else:
+            raise ValueError("Embed Field Must be either a Field object or a dict: {\"name\": str, \"value\": str, \"inline\": bool = False}")
 
         embed.add_field(name=name, value=value, inline=inline)
 

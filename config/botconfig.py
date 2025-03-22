@@ -1,4 +1,4 @@
-from typing import Any, Union, override
+from typing import Any, Union
 from pprint import pformat
 from .confighandler import ConfigHandler
 from .schemavalidator import SchemaValidator
@@ -58,7 +58,6 @@ class BotConfig(ConfigHandler):
             }
         }
 
-    @override
     def set_config(self, config_obj: Union[str, dict, Any]) -> None:
         """
         Set and validate bot configuration

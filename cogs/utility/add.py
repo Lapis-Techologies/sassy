@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from discord.ext import commands
 from discord import User, app_commands, Interaction
 from utils.adduser import add as add_
-from utils.log import Importancy, LogType, log
+from utils.log import Importancy, LogType, log, Field
 from utils.checks import is_admin
 
 
@@ -32,8 +32,8 @@ class Add(commands.Cog):
             await add_(bot=self.bot, member=user, logs=None)
 
             await log(self.bot, inter, LogType.DATABASE_ADD, fields=[
-                {"name": "Moderator", "value": f"{invoker.mention} (`{invoker.id}`)", "inline": False},
-                {"name": "Member", "value": f"{user.mention} (`{user.id}`)", "inline": False}
+                Field("Moderator", f"{invoker.mention} (`{invoker.id}`)", False),
+                Field("Member", f"{user.mention} (`{user.id}`)", False)
             ], importancy=Importancy.LOW)
 
             message = "User added to the database!"

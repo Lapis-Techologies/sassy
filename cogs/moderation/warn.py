@@ -5,7 +5,7 @@ from uuid import uuid4
 from discord.ext import commands
 from discord import app_commands, Interaction, User
 from utils.adduser import add
-from utils.log import LogType, log
+from utils.log import LogType, log, Field
 from utils.checks import db_check, is_admin
 
 
@@ -34,7 +34,7 @@ class Warn(commands.Cog):
             return False
         return True
 
-    async def add_warning(self, user, invoker, case_id, reason) -> None:
+    async def add_warning(self, inter, user, invoker, case_id, reason) -> None:
         curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"logs": 1})
 
         if curs is None:
@@ -65,6 +65,8 @@ class Warn(commands.Cog):
                 }
             })
 
+        await log(self.bot, inter, LogType.WARN, reason, [Field("Case ID", f"`{case_id}`", False)])
+
     @app_commands.command(name="warn", description="Warns a user.")
     @db_check()
     @is_admin()
@@ -77,11 +79,8 @@ class Warn(commands.Cog):
 
         case_id = str(uuid4())
 
-        await self.add_warning(user, invoker, case_id, reason)
-
+        await self.add_warning(inter, user, invoker, case_id, reason)
         await inter.followup.send(f"{user.mention} has been warned!", ephemeral=True)
-
-        await log(self.bot, inter, LogType.WARN, reason=reason, fields=[{"name": "Case ID", "value": f"`{case_id}`", "inline": False}])
 
 
 async def setup(bot: 'Sassy'):

@@ -4,7 +4,7 @@ from uuid import uuid4
 from typing import TYPE_CHECKING
 from discord import app_commands, Interaction, User
 from discord.ext import commands
-from utils.log import log, LogType
+from utils.log import log, LogType, Field
 from utils.checks import db_check, is_admin
 
 
@@ -33,14 +33,14 @@ class Mute(commands.Cog):
         })
 
         await log(self.bot, inter, LogType.MUTE, reason, [
-            {"name": "Time", "value": f"{days} Days, {hours} Hours, {minutes} Minutes", "inline": False},
-            {"name": "Case ID", "value": f"`{case_id}`", "inline": False}
+            Field("Time", f"{days} Days, {hours} Hours, {minutes} Minutes", False),
+            Field("Case ID", f"`{case_id}`", False)
         ])
 
     async def checks(self, inter: Interaction, user: discord.Member, days: int, hours: int, minutes: int) -> bool:
         admin = inter.guild.get_role(self.bot.config.get("guild", "roles", "admin"))
         invoker = inter.user
-        # Discord strangly forces max timeout time to be 28 days ?
+        # Discord strangely forces max timeout time to be 28 days ?
         total_time_seconds = (days * 86400) + (hours * 3600) + (minutes * 60)
         if isinstance(invoker, User):
             return False
