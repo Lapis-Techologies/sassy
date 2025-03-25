@@ -112,7 +112,6 @@ class Events(commands.Cog):
         channel = message.channel
 
         bump_channel = self.bot.config.get("guild", "channels", "bump", "id")
-
         if channel.id != bump_channel:
             return
         elif not message.embeds or len(message.embeds) != 1:
@@ -120,17 +119,14 @@ class Events(commands.Cog):
 
         embed = message.embeds[0]
 
-        if not (embed.description and "Bump done! :thumbsup:" in embed.description):
-            return
-
         with open("./resources/oh-yis.gif", "rb") as gif:
             gif = discord.File(fp=BytesIO(gif.read()), filename="oh-yis.gif")
-            await channel.send(f"Thanks for bumping {message.interaction_metadata.user.mention}, I'll remind you to bump again in 2 hours!", files=[gif])
+
+        await channel.send(f"Thanks for bumping {message.interaction_metadata.user.mention}, I'll remind you to bump again in 2 hours!", files=[gif])
         await self.bot.loop.create_task(self.bump_task(channel, message))
 
     async def bump_task(self, channel, message) -> None:
         await sleep(5 if self.bot.config.get("database", "dev") else 7200)  # 5 seconds if developing else 2 hours.
-
         with open("./resources/you-fucken-druggah.gif", "rb") as gif:
             file = discord.File(fp=BytesIO(gif.read()), filename="you-fucken-druggah.gif")
             await channel.send(f"{message.interaction_metadata.user.mention} Time to bump you fucken druggah",
