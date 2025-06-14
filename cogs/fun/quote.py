@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 class Quote(commands.Cog):
-    def __init__(self, bot: 'Sassy'):
+    def __init__(self, bot: "Sassy"):
         self.bot = bot
 
     @app_commands.command(name="quote", description="You want some advice from me?")
@@ -25,5 +25,5 @@ class Quote(commands.Cog):
         await inter.response.send_message(selected_quote)
 
 
-async def setup(bot: 'Sassy'):
+async def setup(bot: "Sassy"):
     await bot.add_cog(Quote(bot))

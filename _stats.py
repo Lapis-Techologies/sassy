@@ -5,7 +5,9 @@ import time
 
 
 class ProjectReader:
-    def __init__(self, path: str | None = None, banned: tuple[str, ...] = tuple()) -> None:
+    def __init__(
+        self, path: str | None = None, banned: tuple[str, ...] = tuple()
+    ) -> None:
         """
         A simple class to read a project's files and calculate some statistics.
         :param path: Base path to start reading files from. Default is current working directory.
@@ -18,8 +20,8 @@ class ProjectReader:
         self.size = 0
         self.directories = 0
         self._kb = 1024
-        self._mb = 1024 ** 2
-        self._gb = 1024 ** 3
+        self._mb = 1024**2
+        self._gb = 1024**3
         self.path = pathlib.Path(os.getcwd()) if path is None else pathlib.Path(path)
         self.banned = banned
 
@@ -39,7 +41,7 @@ class ProjectReader:
 
         feet, miles = self._get_length(self.lines)
 
-        return f"{'-' * 50}\nReading files in '{self.path}':\nTotal lines: {lines} (~{lines//(files - failed)} lines per file)\nTotal files: {files} (Failed {failed} files)\nTotal directories: {self.directories}\nTotal files read: {files - failed}\nTotal size: {self._format_size()}\nLongest File: {self.lname} ({self.llength} lines)\nLength: {feet}ft ({miles} Miles){'-' * 50}"
+        return f"{'-' * 50}\nReading files in '{self.path}':\nTotal lines: {lines} (~{lines // (files - failed)} lines per file)\nTotal files: {files} (Failed {failed} files)\nTotal directories: {self.directories}\nTotal files read: {files - failed}\nTotal size: {self._format_size()}\nLongest File: {self.lname} ({self.llength} lines)\nLength: {feet}ft ({miles} Miles){'-' * 50}"
 
     def _format_size(self) -> str:
         """
@@ -47,10 +49,13 @@ class ProjectReader:
         :return: str
         """
         return (
-            f"{self.size:.2f} bytes" if self.size < self._kb else
-            f"{self.size / self._kb:.2f} KB" if self.size < self._mb else
-            f"{self.size / self._mb:.2f} MB" if self.size < self._gb else
-            f"{self.size / self._gb:.2f} GB"
+            f"{self.size:.2f} bytes"
+            if self.size < self._kb
+            else f"{self.size / self._kb:.2f} KB"
+            if self.size < self._mb
+            else f"{self.size / self._mb:.2f} MB"
+            if self.size < self._gb
+            else f"{self.size / self._gb:.2f} GB"
         )
 
     @staticmethod
@@ -71,7 +76,9 @@ class ProjectReader:
 
         return self._process_folder(self.path)
 
-    def _process_folder(self, folder: pathlib.Path) -> tuple[int, int, int, float, str, int]:
+    def _process_folder(
+        self, folder: pathlib.Path
+    ) -> tuple[int, int, int, float, str, int]:
         """
         Process a folder.
         :param folder: pathlib.Path
@@ -101,7 +108,7 @@ class ProjectReader:
                         largest_file_lines = lf_lines
                 elif item.is_file():
                     try:
-                        with open(item, 'r') as f:
+                        with open(item, "r") as f:
                             file_lines = len(f.readlines())
                             files += 1
                             lines += file_lines
@@ -110,7 +117,7 @@ class ProjectReader:
                             if file_lines > largest_file_lines:
                                 largest_file_name = item.name
                                 largest_file_lines = file_lines
-                    except Exception:   # noqa
+                    except Exception:  # noqa
                         failed += 1
                 else:
                     continue
@@ -121,11 +128,13 @@ class ProjectReader:
 
 
 # https://stackoverflow.com/questions/552744/how-do-i-profile-memory-usage-in-python
-def display_top(snapshot, key_type='lineno'):
-    snapshot = snapshot.filter_traces((
-        tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
-        tracemalloc.Filter(False, "<unknown>"),
-    ))
+def display_top(snapshot, key_type="lineno"):
+    snapshot = snapshot.filter_traces(
+        (
+            tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+            tracemalloc.Filter(False, "<unknown>"),
+        )
+    )
     top_stats = snapshot.statistics(key_type)
 
     total = sum(stat.size for stat in top_stats)
@@ -143,19 +152,19 @@ def main(debug: bool, path: str | None = None) -> None:
         start = time.time()
 
     banned = (
-        'venv',
-        '.idea',
-        '__pycache__',
+        "venv",
+        ".idea",
+        "__pycache__",
         os.path.basename(__file__),
-        '.gitignore',
-        '.git',
-        '.vscode',
-        '.gitattributes',
-        '.gitmodules',
-        'LICENSE',
-        'README.md',
-        '.venv',
-        'dev'
+        ".gitignore",
+        ".git",
+        ".vscode",
+        ".gitattributes",
+        ".gitmodules",
+        "LICENSE",
+        "README.md",
+        ".venv",
+        "dev",
     )
 
     reader = ProjectReader(banned=banned, path=path or os.getcwd())
@@ -168,7 +177,7 @@ def main(debug: bool, path: str | None = None) -> None:
         print(f"Time taken: {time.time() - start:.2f} seconds")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     debug = False
     path = None
     main(debug, path)

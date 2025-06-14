@@ -16,23 +16,33 @@ class Help(commands.Cog):
     @app_commands.command(name="help", description="Get help on a command.")
     @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
     @db_check()
-    async def help(self, inter: Interaction):   # TODO: Use pages
+    async def help(self, inter: Interaction):  # TODO: Use pages
         await inter.response.defer()
 
         embed = discord.Embed(
             title="Help",
             description="Lists all of the commands.",
-            color=discord.Color.blurple()
+            color=discord.Color.blurple(),
         )
 
-        cmds = [com for com in self.bot.tree.walk_commands() if isinstance(com, app_commands.Command)]
-        groups = [com for com in self.bot.tree.walk_commands() if isinstance(com, app_commands.Group)]
+        cmds = [
+            com
+            for com in self.bot.tree.walk_commands()
+            if isinstance(com, app_commands.Command)
+        ]
+        groups = [
+            com
+            for com in self.bot.tree.walk_commands()
+            if isinstance(com, app_commands.Group)
+        ]
 
         for slash_command in cmds:
             embed.add_field(
                 name=slash_command.name,
-                value=slash_command.description if slash_command.description else "No description provided.",
-                inline=False
+                value=slash_command.description
+                if slash_command.description
+                else "No description provided.",
+                inline=False,
             )
 
         embeds = [embed]
@@ -40,15 +50,19 @@ class Help(commands.Cog):
         for group_command in groups:
             emb = discord.Embed(
                 title=group_command.name,
-                description=group_command.description if group_command.description else "No description provided.",
-                color=discord.Color.blurple()
+                description=group_command.description
+                if group_command.description
+                else "No description provided.",
+                color=discord.Color.blurple(),
             )
 
             for sub_command in group_command.commands:
                 emb.add_field(
                     name=sub_command.name,
-                    value=sub_command.description if sub_command.description else "No description provided.",
-                    inline=False
+                    value=sub_command.description
+                    if sub_command.description
+                    else "No description provided.",
+                    inline=False,
                 )
             embeds.append(emb)
 

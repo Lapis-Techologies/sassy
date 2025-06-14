@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="sassy" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="sassy" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="$USER_HOME$/miniconda3/envs/sassy" project-jdk-type="Python SDK" />
 </project>

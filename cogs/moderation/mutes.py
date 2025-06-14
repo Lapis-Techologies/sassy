@@ -14,10 +14,17 @@ class Mutes(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
 
-    async def find_case_by_id(self, case_id, interaction , member):
-        curs = await self.bot.user_db.find_one({"uid": member.id}, projection={"logs": {"$elemMatch": {"case_id": case_id}}})
+    async def find_case_by_id(self, case_id, interaction, member):
+        curs = await self.bot.user_db.find_one(
+            {"uid": member.id},
+            projection={"logs": {"$elemMatch": {"case_id": case_id}}},
+        )
         if curs is None:
-            embed = discord.Embed(title="No Mutes Found", description=f"{member.mention} does not have any mutes on record!", color=0x00FF00)
+            embed = discord.Embed(
+                title="No Mutes Found",
+                description=f"{member.mention} does not have any mutes on record!",
+                color=0x00FF00,
+            )
             await interaction.followup.send(embed=embed)
             return
 
@@ -27,7 +34,12 @@ class Mutes(commands.Cog):
         moderator = self.bot.get_user(curs["moderator"])
 
         embed.add_field(name="Case ID", value=f"`{case_id}`")
-        embed.add_field(name="Moderator", value=moderator.mention if moderator is not None else f"<@{moderator}>  (`{moderator}`)")
+        embed.add_field(
+            name="Moderator",
+            value=moderator.mention
+            if moderator is not None
+            else f"<@{moderator}>  (`{moderator}`)",
+        )
         embed.add_field(name="Reason", value=f"```{reason}```", inline=False)
 
         await interaction.followup.send(embed=embed)
@@ -36,25 +48,30 @@ class Mutes(commands.Cog):
     async def find_mutes(self, member, interaction) -> None:
         pipeline = [
             {"$match": {"uid": member.id}},
-            {"$project": {
-                "logs": {
-                    "$filter": {
-                        "input": "$logs",
-                        "as": "log",
-                        "cond": {"$eq": ["$$log.action", LogType.MUTE.value]}
+            {
+                "$project": {
+                    "logs": {
+                        "$filter": {
+                            "input": "$logs",
+                            "as": "log",
+                            "cond": {"$eq": ["$$log.action", LogType.MUTE.value]},
+                        }
                     }
                 }
-            }}
+            },
         ]
         users = await self.bot.user_db.aggregate(pipeline).to_list(None)
         cases = [log for user in users for log in user.get("logs", [])]
 
         if not cases:
-            embed = discord.Embed(title="No Mutes Found", description=f"{member.mention} does not have any mutes on record!", color=0x00FF00)
+            embed = discord.Embed(
+                title="No Mutes Found",
+                description=f"{member.mention} does not have any mutes on record!",
+                color=0x00FF00,
+            )
             await interaction.followup.send(embed=embed)
             return
 
-        
         embed = discord.Embed(title=f"Mutes for {member} ({member.id})", color=0xFF0000)
         count = 0
 
@@ -64,15 +81,25 @@ class Mutes(commands.Cog):
             reason = log["reason"]
             date = log["timestamp"]
             mod = log["moderator"]
-            embed.add_field(name=f"Case ID: {case_id}", value=f"Reason: `{reason}`\nModerator: {mod}\nDate: {date}")
-        
+            embed.add_field(
+                name=f"Case ID: {case_id}",
+                value=f"Reason: `{reason}`\nModerator: {mod}\nDate: {date}",
+            )
+
         embed.set_footer(text=f"Total Mute Count: {count}")
         await interaction.followup.send(embed=embed)
 
-    @app_commands.command(name="mutes", description="View all mutes for a specific user.")
+    @app_commands.command(
+        name="mutes", description="View all mutes for a specific user."
+    )
     @db_check()
     @is_admin()
-    async def mutes(self, interaction: Interaction, member: discord.Member, case_id: str | None = None) -> None:
+    async def mutes(
+        self,
+        interaction: Interaction,
+        member: discord.Member,
+        case_id: str | None = None,
+    ) -> None:
         await interaction.response.defer()
 
         if case_id:

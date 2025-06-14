@@ -13,15 +13,19 @@ class Rank(commands.Cog):
     def __init__(self, bot: "Sassy") -> None:
         self.bot = bot
 
-    @app_commands.command(name="rank", description="Check yours (or another person's) rank.")
+    @app_commands.command(
+        name="rank", description="Check yours (or another person's) rank."
+    )
     @db_check()
     async def rank(self, interaction: Interaction, member: Member) -> None:
-        curs = await self.bot.user_db.find_one({"uid": member.id}, projection={"xp": 1, "level": 1})
+        curs = await self.bot.user_db.find_one(
+            {"uid": member.id}, projection={"xp": 1, "level": 1}
+        )
 
         xp = curs["xp"]
         level = curs["level"]
-        new_xp = XPHandler.calculate_xp(level+1)
-        progress = XPHandler.calculate_progress(xp ,new_xp)
+        new_xp = XPHandler.calculate_xp(level + 1)
+        progress = XPHandler.calculate_progress(xp, new_xp)
         bar = XPHandler.make_bar(progress)
 
         embed = Embed(title=f"Rank - {member.name}", color=0x0077FF)
@@ -30,6 +34,7 @@ class Rank(commands.Cog):
         embed.add_field(name="Progress", value=f"{xp} > {bar} < {new_xp}")
 
         await interaction.response.send_message(embed=embed)
+
 
 async def setup(bot):
     await bot.add_cog(Rank(bot))

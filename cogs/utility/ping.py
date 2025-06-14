@@ -19,5 +19,5 @@ class Ping(commands.Cog):
         await inter.response.send_message(f"Pong! {round(self.bot.latency * 1000)}ms")
 
 
-async def setup(bot: 'Sassy'):
+async def setup(bot: "Sassy"):
     await bot.add_cog(Ping(bot))

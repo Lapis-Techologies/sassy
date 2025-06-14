@@ -16,12 +16,22 @@ class Sassy(commands.Bot):
     """
     Sassy the Sasquatch discord bot!!!!
     """
-    def __init__(self, bot_config, user_db, economy_db, starboard_db, verbose: bool = False, *args, **kwargs):
+
+    def __init__(
+        self,
+        bot_config,
+        user_db,
+        economy_db,
+        starboard_db,
+        verbose: bool = False,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.user_db = user_db
         self.economy_db = economy_db
         self.starboard_db = starboard_db
-        self.verbose = verbose 
+        self.verbose = verbose
         self.IGNORE_COMMANDS = []
         self.config: botconfig.BotConfig = bot_config
         self.version = get_version()
@@ -38,24 +48,31 @@ class Sassy(commands.Bot):
         if guild is None:
             print("Cannot find guild! Check your config file!")
             sys.exit(1)
-        self.tree.copy_global_to(guild=guild)  # https://stackoverflow.com/a/75236448/19119462
+        self.tree.copy_global_to(
+            guild=guild
+        )  # https://stackoverflow.com/a/75236448/19119462
         synced = len(await self.tree.sync(guild=guild))
         print(f"Synced {synced} commands!")
 
         if self.user is None:
             print("Unable to login in!")
-            exit()
+            sys.exit(1)
 
         print(f"Logged in as {self.user.name} ({self.user.id})")
 
         print(f"Now version {self.version} 🎉")
 
-        await self.change_presence(status=None, activity=Activity(type=ActivityType.listening, name=f"Now Version {self.version}!"))
+        await self.change_presence(
+            status=None,
+            activity=Activity(
+                type=ActivityType.listening, name=f"Now Version {self.version}!"
+            ),
+        )
 
         await self.loop.create_task(self.repl.run())
 
     async def load_cogs(self):
-        if not os.path.exists("./cogs"):
+        if not pathlib.Path.exists(pathlib.Path("./cogs")):
             raise OSError("You need a cogs folder!")
 
         cogs = pathlib.Path(os.getcwd()).joinpath("cogs")
@@ -64,13 +81,11 @@ class Sassy(commands.Bot):
             raise OSError("'cogs' should be a folder/directory, not a file!")
 
         print(f"{'=' * 10} COGS {'=' * 10}")
-        await self._process_folder(cogs, 'cogs')
-        print('=' * 26)
+        await self._process_folder(cogs, "cogs")
+        print("=" * 26)
 
     async def _process_folder(self, path: pathlib.Path, path_start: str):
-        banned = (
-            '__pycache__'
-        )
+        banned = "__pycache__"
 
         for item in path.iterdir():
             if item.name in banned:
@@ -89,11 +104,13 @@ class Sassy(commands.Bot):
                     await self.load_extension(module)
                     print(f"Loaded {module}")
                 except Exception as e:
-                    print(f"Failed to load {module} with error: {e}") if self.verbose else None
+                    print(
+                        f"Failed to load {module} with error: {e}"
+                    ) if self.verbose else None
 
 
 def get_version() -> str:
-    return str(check_output(["python", "bumper.py", "-q"]).strip(), encoding='utf-8')
+    return str(check_output(["python", "bumper.py", "-q"]).strip(), encoding="utf-8")
 
 
 async def main() -> None:
@@ -119,16 +136,24 @@ async def main() -> None:
 
     args = sys.argv
 
-    verbose = args[-1] in ('-v', '--verbose')
+    verbose = args[-1] in ("-v", "--verbose")
 
-    bot = Sassy(command_prefix=prefix, intents=intents, bot_config=bot_config, user_db=user_db, economy_db=economy_db, verbose=verbose, starboard_db=starboard_db)
+    bot = Sassy(
+        command_prefix=prefix,
+        intents=intents,
+        bot_config=bot_config,
+        user_db=user_db,
+        economy_db=economy_db,
+        verbose=verbose,
+        starboard_db=starboard_db,
+    )
     try:
         await bot.start(token)
     finally:
         await bot.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:

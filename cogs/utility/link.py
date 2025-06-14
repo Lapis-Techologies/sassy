@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 class Link(commands.Cog):
     def __init__(self, bot: "Sassy") -> None:
         self.bot = bot
-    
+
     @app_commands.command(name="link", description="Get a link to any of the shows!")
     @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
     @db_check()

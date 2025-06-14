@@ -19,17 +19,19 @@ class Rules(commands.Cog):
     async def ping(self, inter: Interaction):
         with open("./resources/rules.json", "r") as f:
             rules: list[dict[str, str]] = load(f)
-        
+
         embed = Embed(title="Rules", color=0x17FF77)
-        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1254314000347435090/1254545696187482263/lez_6011.png?ex=6679e23a&is=667890ba&hm=4c4c774ac8750b3e4648fc5e0b18cd9c07d194732580d755695fa26fde4626ad&")
+        embed.set_thumbnail(
+            url="https://cdn.discordapp.com/attachments/1254314000347435090/1254545696187482263/lez_6011.png?ex=6679e23a&is=667890ba&hm=4c4c774ac8750b3e4648fc5e0b18cd9c07d194732580d755695fa26fde4626ad&"
+        )
 
         for i, entry in enumerate(rules):
             rule = next(iter(entry))
             details = entry[rule]
-            embed.add_field(name=f"{i+1}. {rule}", value=details, inline=False)
-        
+            embed.add_field(name=f"{i + 1}. {rule}", value=details, inline=False)
+
         await inter.response.send_message(embed=embed)
 
 
-async def setup(bot: 'Sassy'):
+async def setup(bot: "Sassy"):
     await bot.add_cog(Rules(bot))

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class Add(commands.Cog):
-    def __init__(self, bot: 'Sassy'):
+    def __init__(self, bot: "Sassy"):
         self.bot = bot
 
     @app_commands.command(name="add", description="Adds a user to the database.")
@@ -31,16 +31,21 @@ class Add(commands.Cog):
         else:
             await add_(bot=self.bot, member=user, logs=None)
 
-            await log(self.bot, inter, LogType.DATABASE_ADD, fields=[
-                Field("Moderator", f"{invoker.mention} (`{invoker.id}`)", False),
-                Field("Member", f"{user.mention} (`{user.id}`)", False)
-            ], importancy=Importancy.LOW)
+            await log(
+                self.bot,
+                inter,
+                LogType.DATABASE_ADD,
+                fields=[
+                    Field("Moderator", f"{invoker.mention} (`{invoker.id}`)", False),
+                    Field("Member", f"{user.mention} (`{user.id}`)", False),
+                ],
+                importancy=Importancy.LOW,
+            )
 
             message = "User added to the database!"
 
         await inter.followup.send(message, ephemeral=True)
 
 
-
-async def setup(bot: 'Sassy'):
+async def setup(bot: "Sassy"):
     await bot.add_cog(Add(bot))

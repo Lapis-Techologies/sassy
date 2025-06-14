@@ -14,8 +14,11 @@ class XPHandler(Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
         self.rewards = sorted(
-            [(int(level), role) for level, role in self.bot.config.get("xp", "rewards").items()],
-            key=lambda x: x[0]
+            [
+                (int(level), role)
+                for level, role in self.bot.config.get("xp", "rewards").items()
+            ],
+            key=lambda x: x[0],
         )
 
     @staticmethod
@@ -58,7 +61,15 @@ class XPHandler(Cog):
             return left_over, level
         return new_xp, level
 
-    async def try_level_up(self, level: int, level_new: int, xp: int, xp_new: int, message: Message, last_message_time: float) -> None:
+    async def try_level_up(
+        self,
+        level: int,
+        level_new: int,
+        xp: int,
+        xp_new: int,
+        message: Message,
+        last_message_time: float,
+    ) -> None:
         if level_new > level:
             xp_needed = self.calculate_xp(level_new)
             progress = self.calculate_progress(xp_new, xp_needed)
@@ -70,29 +81,27 @@ class XPHandler(Cog):
             embed = Embed(
                 title="Level Up!",
                 description=f"Congratulations you fuckin druggo, you're level __**{level_new}**__!",
-                color=message.author.color or 0x92A0FF
+                color=message.author.color or 0x92A0FF,
             )
             embed.add_field(
                 name="Xp Progress",
                 value=f"**{xp_new}** ▶ {bar} ◀ **{xp_needed}**",
             )
-            embed.set_footer(
-                text="yeeeeebrah"
-            )
+            embed.set_footer(text="yeeeeebrah")
 
             await message.channel.send(message.author.mention, embed=embed)
 
-    async def update_member(self, member: Member, xp: int, level_new: int, last_message_time: float) -> None:
-        await self.bot.user_db.update_one({"uid": member.id}, {
-            "$set": {
-                "xp": xp,
-                "level": level_new,
-                "last_message": last_message_time
-            }
-        })
+    async def update_member(
+        self, member: Member, xp: int, level_new: int, last_message_time: float
+    ) -> None:
+        await self.bot.user_db.update_one(
+            {"uid": member.id},
+            {"$set": {"xp": xp, "level": level_new, "last_message": last_message_time}},
+        )
 
         roles_to_add = [
-            role for level, role in self.rewards
+            role
+            for level, role in self.rewards
             if level <= level_new and role not in member.roles
         ]
 
@@ -104,7 +113,10 @@ class XPHandler(Cog):
         if message.author.bot:
             return
 
-        curs = await self.bot.user_db.find_one({"uid": message.author.id}, projection={"xp": 1, "level": 1, "last_message": 1})
+        curs = await self.bot.user_db.find_one(
+            {"uid": message.author.id},
+            projection={"xp": 1, "level": 1, "last_message": 1},
+        )
 
         if curs is None and message.guild.id == self.bot.config.get("guild", "id"):
             await add(self.bot, message.author)
@@ -122,15 +134,20 @@ class XPHandler(Cog):
 
         xp_new, level_new = self.add_xp(xp, level)
 
-        await self.bot.user_db.update_one({"uid": message.author.id}, {
-            "$set": {
-                "xp": xp_new,
-                "level": level_new,
-                "last_message": last_message_time
-            }
-        })
+        await self.bot.user_db.update_one(
+            {"uid": message.author.id},
+            {
+                "$set": {
+                    "xp": xp_new,
+                    "level": level_new,
+                    "last_message": last_message_time,
+                }
+            },
+        )
 
-        await self.try_level_up(level, level_new, xp, xp_new, message, last_message_time)
+        await self.try_level_up(
+            level, level_new, xp, xp_new, message, last_message_time
+        )
 
 
 async def setup(bot):

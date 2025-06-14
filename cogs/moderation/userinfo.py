@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class UserInfo(commands.Cog):
-    def __init__(self, bot: 'Sassy'):
+    def __init__(self, bot: "Sassy"):
         self.bot = bot
 
     def make_embeds(self, logs, member, embed) -> list[discord.Embed]:
@@ -22,7 +22,7 @@ class UserInfo(commands.Cog):
                 embeds.append(embed)
                 embed = discord.Embed(
                     title=f"User Information for {member} ({member.id}) - Continued",
-                    color=0x00FF00
+                    color=0x00FF00,
                 )
 
             case_id = log["case_id"]
@@ -34,33 +34,40 @@ class UserInfo(commands.Cog):
             embed.add_field(
                 name=f"Case ID: {case_id}",
                 value=f"Action: `{action}`\nReason: `{reason}`\nModerator: <@{moderator}>\nTimestamp: `{timestamp}`",
-                inline=False
+                inline=False,
             )
-        
+
         if embed not in embeds:
             embeds.append(embed)
 
         return embeds
 
-    @app_commands.command(name="userinfo", description="View information about a specified user.")
+    @app_commands.command(
+        name="userinfo", description="View information about a specified user."
+    )
     @db_check()
     @is_admin()
     async def userinfo(self, inter: Interaction, member: discord.Member):
-        await inter.response.defer() 
+        await inter.response.defer()
 
         embed = discord.Embed(
-            title=f"User Information for {member} ({member.id})",
-            color=0x00FF00
+            title=f"User Information for {member} ({member.id})", color=0x00FF00
         )
-        embed.set_thumbnail(url=member.avatar.url or member.default_avatar.url) if member.avatar is not None else None
+        embed.set_thumbnail(
+            url=member.avatar.url or member.default_avatar.url
+        ) if member.avatar is not None else None
 
-        curs = await self.bot.user_db.find_one({"uid": member.id}, projection={"logs": 1})
+        curs = await self.bot.user_db.find_one(
+            {"uid": member.id}, projection={"logs": 1}
+        )
 
         if curs is None:
             await add(bot=self.bot, member=member)
 
             embed.add_field(name="Choomah Coins", value="0", inline=False)
-            embed.add_field(name="Logs", value="No logs found for this user.", inline=False)
+            embed.add_field(
+                name="Logs", value="No logs found for this user.", inline=False
+            )
 
             await inter.followup.send(embed=embed)
             return
@@ -68,7 +75,9 @@ class UserInfo(commands.Cog):
         logs = curs["logs"]
         if len(logs) == 0:
             embed.add_field(name="Choomah Coins", value="0", inline=False)
-            embed.add_field(name="Logs", value="No logs found for this user.", inline=False)
+            embed.add_field(
+                name="Logs", value="No logs found for this user.", inline=False
+            )
 
             await inter.followup.send(embed=embed)
             return
@@ -79,5 +88,5 @@ class UserInfo(commands.Cog):
             await inter.followup.send(embed=embed)
 
 
-async def setup(bot: 'Sassy'):
+async def setup(bot: "Sassy"):
     await bot.add_cog(UserInfo(bot))
