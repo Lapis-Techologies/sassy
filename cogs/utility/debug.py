@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import TYPE_CHECKING
 from discord import app_commands, Interaction, Embed
 from discord.ext import commands
@@ -11,24 +12,18 @@ if TYPE_CHECKING:
 class Debug(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
-        self.banned = (
-            "venv",
-            ".idea",
-            "__pycache__",
-            "_stats.py",
-            ".gitignore",
-            ".git",
-            ".vscode",
-            ".gitattributes",
-            ".gitmodules",
-            "LICENSE",
-            "README.md",
-            "config.json.example",
-            ".env.example",
-            ".venv",
-            "dev",
-            *self.bot.IGNORE_COMMANDS,
-        )
+        self.whitelist = [
+            Path("bumper.py"),
+            Path("main.py"),
+            Path("repl.py"),
+            Path("utils/"),
+            Path("resources/"),
+            Path("config/"),
+            Path("cogs/"),
+        ]
+        self.banned = [
+            '__pycache__'
+        ]
 
     @commands.is_owner()
     @app_commands.command(
@@ -40,7 +35,6 @@ class Debug(commands.Cog):
             return
         if self.bot.user.avatar is None:
             return
-
         embed = Embed(
             title="Debug",
             description="General Information about the bot's status",
@@ -64,7 +58,7 @@ class Debug(commands.Cog):
             or self.bot.user.display_avatar.url
             or self.bot.user.default_avatar.url
         )
-        stats = ProjectReader(banned=self.banned).project_stats().replace("-", "")
+        stats = ProjectReader(self.whitelist, self.banned).project_stats()
 
         embed.add_field(name="Bot Name", value=name)
         embed.add_field(name="Bot ID", value=id_)
@@ -72,10 +66,9 @@ class Debug(commands.Cog):
         embed.add_field(name="Guilds", value=guilds)
         embed.add_field(name="Users", value=users)
         embed.add_field(name="Commands", value=cmds)
-        embed.add_field(name="Stats", value=stats)
         embed.set_thumbnail(url=pfp) if pfp is not None else None
 
-        await inter.followup.send(embed=embed, ephemeral=True)
+        await inter.followup.send(embeds=[embed, stats], ephemeral=True)
 
 
 async def setup(bot: "Sassy"):

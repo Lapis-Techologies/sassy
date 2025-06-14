@@ -16,7 +16,7 @@
       "dev": 1234567890,
       "reactions": {
         "message": 1234567890,
-        "rofl": 1234567890,  # EMOJI: ROLE
+        "rofl": 1234567890,  # REMOVE ME! FORMAT: EMOJI: ROLE
         "1234567890": 1234567890
       }
     },

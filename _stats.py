@@ -1,183 +1,150 @@
 import pathlib
 import os
-import tracemalloc
-import time
+from discord import Embed
 
 
 class ProjectReader:
-    def __init__(
-        self, path: str | None = None, banned: tuple[str, ...] = tuple()
-    ) -> None:
-        """
-        A simple class to read a project's files and calculate some statistics.
-        :param path: Base path to start reading files from. Default is current working directory.
-        :param banned: Banned directories/files to ignore.
-        """
-        self.lines = 0
-        self.total = 0
-        self.files = 0
-        self.failed = 0
-        self.size = 0
-        self.directories = 0
-        self._kb = 1024
-        self._mb = 1024**2
-        self._gb = 1024**3
-        self.path = pathlib.Path(os.getcwd()) if path is None else pathlib.Path(path)
-        self.banned = banned
+    def __init__(self, whitelisted: list[pathlib.Path], banned: list[str]):
+        self.whitelisted = whitelisted
+        self.banned = banned  # List of banned names for files
 
-    def project_stats(self) -> str:
-        """
-        Print the project statistics.
-        :return: None
-        """
-        lines, files, failed, size, name, length = self._process_project()
+    def project_stats(self):
+        root = pathlib.Path(os.getcwd())
+        lines = 0
+        files = 0
+        directories = 0
+        failed = 0
+        size = 0
+        longest_file = {}
 
-        self.lines = lines
-        self.files = files
-        self.failed = failed
-        self.size = size
-        self.lname = name
-        self.llength = length
+        for path in self.whitelisted:
+            path = pathlib.Path.joinpath(root, path)
+            if path.is_file():
+                files += 1
+                try:
+                    file_lines, file_size, new_longest_file = self._handle_file(
+                        path, longest_file
+                    )
+                    lines += file_lines
+                    size += file_size
+                    if new_longest_file:
+                        longest_file = new_longest_file
+                except Exception as e:
+                    print(f"Failed to process {path}: {e}")
+                    failed += 1
+                    continue
+            elif path.is_dir():
+                directories += 1
+                dir_lines, dir_size, dir_files, dir_failed, new_longest_file = (
+                    self._handle_directory(path, longest_file)
+                )
+                lines += dir_lines
+                size += dir_size
+                files += dir_files
+                failed += dir_failed
+                if new_longest_file:
+                    longest_file = new_longest_file
 
-        feet, miles = self._get_length(self.lines)
+        feet, miles = self._get_length(lines)
 
-        return f"{'-' * 50}\nReading files in '{self.path}':\nTotal lines: {lines} (~{lines // (files - failed)} lines per file)\nTotal files: {files} (Failed {failed} files)\nTotal directories: {self.directories}\nTotal files read: {files - failed}\nTotal size: {self._format_size()}\nLongest File: {self.lname} ({self.llength} lines)\nLength: {feet}ft ({miles} Miles){'-' * 50}"
+        embed = Embed(
+            title="Project Stats",
+            description="Some cool facts about me!",
+            color=0x44FF99,
+        )
 
-    def _format_size(self) -> str:
-        """
-        Format the size of the project.
-        :return: str
-        """
+        longest_file_name = list(longest_file.keys())[0] if longest_file else "None"
+        longest_file_length = list(longest_file.values())[0] if longest_file else 0
+
+        embed.add_field(name="Line Count", value=lines)
+        embed.add_field(
+            name="Average Line Count",
+            value=round(lines / files, 1) if files > 0 else 0,
+        )
+        embed.add_field(name="File Count", value=files)
+        embed.add_field(name="Directory Count", value=directories)
+        embed.add_field(name="Files Read", value=files - failed)
+        embed.add_field(name="Files Failed to Read", value=failed)
+        embed.add_field(
+            name="Longest File",
+            value=f"{longest_file_name} with **{longest_file_length}** lines!"
+            if longest_file
+            else "No files processed",
+        )
+        embed.add_field(name="Total Size", value=self._format_size(size))
+        embed.add_field(
+            name="Total Length (Physically)",
+            value=f"**{feet:.2f}** feet, **{miles:.2f}** miles!",
+        )
+
+        return embed
+
+    def _handle_directory(self, path: pathlib.Path, longest_file: dict):
+        dir_lines = 0
+        dir_size = 0
+        dir_files = 0
+        dir_failed = 0
+        for file in path.glob("*"):
+            if file.name in self.banned:
+                continue
+            if file.is_file():
+                dir_files += 1
+                try:
+                    file_lines, file_size, new_longest_file = self._handle_file(
+                        file, longest_file
+                    )
+                    dir_lines += file_lines
+                    dir_size += file_size
+                    if new_longest_file:
+                        longest_file = new_longest_file
+                except Exception as e:
+                    print(f"Failed to process {file}: {e}")
+                    dir_failed += 1
+                    continue
+            else:
+                sub_lines, sub_size, sub_files, sub_failed, new_longest_file = (
+                    self._handle_directory(file, longest_file)
+                )
+                dir_lines += sub_lines
+                dir_size += sub_size
+                dir_files += sub_files
+                dir_failed += sub_failed
+                if new_longest_file:
+                    longest_file = new_longest_file
+        return dir_lines, dir_size, dir_files, dir_failed, longest_file
+
+    def _handle_file(self, path: pathlib.Path, longest_file: dict):
+        file_lines, file_size = self._read_file(path)
+        if not longest_file or list(longest_file.values())[0] < file_lines:
+            return file_lines, file_size, {path.name: file_lines}
+        return file_lines, file_size, None
+
+    def _read_file(self, path: pathlib.Path):
+        with open(path, "r", encoding="utf-8") as file:
+            try:
+                file_lines = len(file.readlines())
+            except UnicodeDecodeError:
+                file_lines = 0
+            size = path.stat().st_size
+        return file_lines, size
+
+    def _format_size(self, size) -> str:
+        kb = 1024
+        mb = kb**2
+        gb = kb**3
         return (
-            f"{self.size:.2f} bytes"
-            if self.size < self._kb
-            else f"{self.size / self._kb:.2f} KB"
-            if self.size < self._mb
-            else f"{self.size / self._mb:.2f} MB"
-            if self.size < self._gb
-            else f"{self.size / self._gb:.2f} GB"
+            f"{size:.2f} bytes"
+            if size < kb
+            else f"{size / kb:.2f} KB"
+            if size < mb
+            else f"{size / mb:.2f} MB"
+            if size < gb
+            else f"{size / gb:.2f} GB"
         )
 
     @staticmethod
     def _get_length(length):
-        total_length_inches = length // 0.15  # 0.15 Inches
-        total_length_feet = total_length_inches // 12  # 12 Inches in foot
-        total_length_mile = total_length_feet / 5280  # 5280 Feet in mile
-
+        total_length_inches = length * 0.1667  # Based on Ubuntu Mono, 12-point font
+        total_length_feet = total_length_inches / 12  # 12 inches per foot
+        total_length_mile = total_length_feet / 5280  # 5280 feet per mile
         return total_length_feet, round(total_length_mile, 2)
-
-    def _process_project(self) -> tuple[int, int, int, float, str, int]:
-        """
-        Process the project files.
-        :return: None
-        """
-        if self.path.is_file():
-            raise NotADirectoryError("Path must be a directory.")
-
-        return self._process_folder(self.path)
-
-    def _process_folder(
-        self, folder: pathlib.Path
-    ) -> tuple[int, int, int, float, str, int]:
-        """
-        Process a folder.
-        :param folder: pathlib.Path
-        :return: tuple containing total lines, total files, total failed files, total size, largest file name, largest file line count
-        """
-        lines = 0
-        files = 0
-        failed = 0
-        size = 0
-        largest_file_name = ""
-        largest_file_lines = 0
-
-        try:
-            for item in folder.iterdir():
-                if item.name in self.banned:
-                    continue
-                elif item.is_dir():
-                    self.directories += 1
-                    l, f, e, s, lf_name, lf_lines = self._process_folder(item)
-                    lines += l
-                    files += f
-                    failed += e
-                    size += s
-                    # Check if the largest file in the subfolder is larger than the current largest
-                    if lf_lines > largest_file_lines:
-                        largest_file_name = lf_name
-                        largest_file_lines = lf_lines
-                elif item.is_file():
-                    try:
-                        with open(item, "r") as f:
-                            file_lines = len(f.readlines())
-                            files += 1
-                            lines += file_lines
-                            size += item.stat().st_size
-                            # Check if this file is the largest one so far
-                            if file_lines > largest_file_lines:
-                                largest_file_name = item.name
-                                largest_file_lines = file_lines
-                    except Exception:  # noqa
-                        failed += 1
-                else:
-                    continue
-        except PermissionError:
-            pass
-
-        return lines, files, failed, size, largest_file_name, largest_file_lines
-
-
-# https://stackoverflow.com/questions/552744/how-do-i-profile-memory-usage-in-python
-def display_top(snapshot, key_type="lineno"):
-    snapshot = snapshot.filter_traces(
-        (
-            tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
-            tracemalloc.Filter(False, "<unknown>"),
-        )
-    )
-    top_stats = snapshot.statistics(key_type)
-
-    total = sum(stat.size for stat in top_stats)
-    print("Total allocated size: %.1f KiB" % (total / 1024))
-
-
-def main(debug: bool, path: str | None = None) -> None:
-    """
-    Main function.
-    :return: None
-    """
-
-    if debug:
-        tracemalloc.start()
-        start = time.time()
-
-    banned = (
-        "venv",
-        ".idea",
-        "__pycache__",
-        os.path.basename(__file__),
-        ".gitignore",
-        ".git",
-        ".vscode",
-        ".gitattributes",
-        ".gitmodules",
-        "LICENSE",
-        "README.md",
-        ".venv",
-        "dev",
-    )
-
-    reader = ProjectReader(banned=banned, path=path or os.getcwd())
-    print(reader.project_stats())
-
-    if debug:
-        snap = tracemalloc.take_snapshot()
-
-        display_top(snap)
-        print(f"Time taken: {time.time() - start:.2f} seconds")
-
-
-if __name__ == "__main__":
-    debug = False
-    path = None
-    main(debug, path)
