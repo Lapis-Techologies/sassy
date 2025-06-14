@@ -9,17 +9,23 @@ if TYPE_CHECKING:
 
 
 class Leaderboard(commands.Cog):
-    def __init__(self, bot: 'Sassy'):
+    def __init__(self, bot: "Sassy"):
         self.bot = bot
 
     async def top(self, amount: int, search: str) -> Embed:
-        curs = self.bot.user_db.aggregate([
-            {"$sort": {search: -1}},
-            {"$limit": amount},
-            {"$project": {search: 1, "uid": 1}}
-        ])
+        curs = self.bot.user_db.aggregate(
+            [
+                {"$sort": {search: -1}},
+                {"$limit": amount},
+                {"$project": {search: 1, "uid": 1}},
+            ]
+        )
 
-        embed = Embed(title=f"Leaderboard - {search.replace("_", " ").title()}", description=f"Top {amount} Users", color=0x00FF00)
+        embed = Embed(
+            title=f"Leaderboard - {search.replace('_', ' ').title()}",
+            description=f"Top {amount} Users",
+            color=0x00FF00,
+        )
 
         i = 1
         for entry in await curs.to_list(length=None):
@@ -28,12 +34,19 @@ class Leaderboard(commands.Cog):
                 continue
 
             value = entry[search]
-            embed.add_field(name=f"{i}. {user.name}", value=f"{search.replace("_", " ").title()}: ***{value}***", inline=False)
+            embed.add_field(
+                name=f"{i}. {user.name}",
+                value=f"{search.replace('_', ' ').title()}: ***{value}***",
+                inline=False,
+            )
             i += 1
 
         return embed
 
-    @app_commands.command(name="leaderboard", description="Shows the top leaderboard for who has the most choomah coins")
+    @app_commands.command(
+        name="leaderboard",
+        description="Shows the top leaderboard for who has the most choomah coins",
+    )
     @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
     @db_check()
     async def leaderboard(self, inter: Interaction) -> None:

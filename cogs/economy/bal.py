@@ -21,9 +21,13 @@ class Bal(commands.Cog):
         """
         user = inter.user
 
-        curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"choomah_coins": 1})
+        curs = await self.bot.user_db.find_one(
+            {"uid": user.id}, projection={"choomah_coins": 1}
+        )
 
-        await inter.response.send_message(f"You have **{curs["choomah_coins"]}** choomah coins!")
+        await inter.response.send_message(
+            f"You have **{curs['choomah_coins']}** choomah coins!"
+        )
 
 
 async def setup(bot):

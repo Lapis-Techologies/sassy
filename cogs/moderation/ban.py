@@ -13,25 +13,34 @@ if TYPE_CHECKING:
 
 
 class Ban(commands.Cog):
-    def __init__(self, bot: 'Sassy'):
+    def __init__(self, bot: "Sassy"):
         self.bot = bot
 
     async def add_ban(self, inter, user, reason, invoker) -> None:
         case_id = str(uuid4())
 
-        await self.bot.user_db.update_one({"uid": user.id}, {
-            "$push": {
-                "logs": {
-                    "case_id": case_id,
-                    "action": LogType.BAN,
-                    "reason": reason,
-                    "moderator": invoker.id,
-                    "timestamp": datetime.datetime.now(datetime.UTC)
+        await self.bot.user_db.update_one(
+            {"uid": user.id},
+            {
+                "$push": {
+                    "logs": {
+                        "case_id": case_id,
+                        "action": LogType.BAN,
+                        "reason": reason,
+                        "moderator": invoker.id,
+                        "timestamp": datetime.datetime.now(datetime.UTC),
+                    }
                 }
-            }
-        })
+            },
+        )
 
-        await log(self.bot, inter, LogType.BAN, reason, fields=[Field("Case ID", f"`{case_id}", False)])
+        await log(
+            self.bot,
+            inter,
+            LogType.BAN,
+            reason,
+            fields=[Field("Case ID", f"`{case_id}", False)],
+        )
 
     async def check(self, inter, invoker, user) -> bool:
         admin = self.bot.config.get("guild", "roles", "admin")
@@ -52,16 +61,23 @@ class Ban(commands.Cog):
     @app_commands.checks.cooldown(1, 5, key=lambda i: (i.guild_id, i.user.id))
     @db_check()
     @is_admin()
-    async def ban(self, inter: Interaction, user: discord.Member, reason: str = "No reason provided."):
+    async def ban(
+        self,
+        inter: Interaction,
+        user: discord.Member,
+        reason: str = "No reason provided.",
+    ):
         await inter.response.defer()
         invoker = inter.user
         if not await self.check(inter, invoker, user):
             return
 
         await user.ban(reason=reason)
-        await inter.followup.send(f"{user.mention} has been banned from the server!", ephemeral=True)
+        await inter.followup.send(
+            f"{user.mention} has been banned from the server!", ephemeral=True
+        )
         await self.add_ban(inter, user, reason, invoker)
 
 
-async def setup(bot: 'Sassy'):
+async def setup(bot: "Sassy"):
     await bot.add_cog(Ban(bot))

@@ -14,13 +14,13 @@ if TYPE_CHECKING:
 
 
 class Warn(commands.Cog):
-    def __init__(self, bot: 'Sassy'):
+    def __init__(self, bot: "Sassy"):
         self.bot = bot
 
     async def checks(self, inter, user) -> bool:
         admin = inter.guild.get_role(self.bot.config.get("guild", "roles", "admin"))
         invoker = inter.user
-        
+
         if isinstance(invoker, User):
             return False
         elif admin in user.roles:
@@ -47,30 +47,43 @@ class Warn(commands.Cog):
                         "action": LogType.WARN,
                         "reason": reason,
                         "moderator": invoker.id,
-                        "timestamp": datetime.datetime.now(datetime.UTC)
+                        "timestamp": datetime.datetime.now(datetime.UTC),
                     }
-                ]
-
+                ],
             )
         else:
-            await self.bot.user_db.update_one({"uid": user.id}, {
-                "$push": {
-                    "logs": {
-                        "case_id": case_id,
-                        "action": LogType.WARN,
-                        "reason": reason,
-                        "moderator": invoker.id,
-                        "timestamp": datetime.datetime.now(datetime.UTC)
+            await self.bot.user_db.update_one(
+                {"uid": user.id},
+                {
+                    "$push": {
+                        "logs": {
+                            "case_id": case_id,
+                            "action": LogType.WARN,
+                            "reason": reason,
+                            "moderator": invoker.id,
+                            "timestamp": datetime.datetime.now(datetime.UTC),
+                        }
                     }
-                }
-            })
+                },
+            )
 
-        await log(self.bot, inter, LogType.WARN, reason, [Field("Case ID", f"`{case_id}`", False)])
+        await log(
+            self.bot,
+            inter,
+            LogType.WARN,
+            reason,
+            [Field("Case ID", f"`{case_id}`", False)],
+        )
 
     @app_commands.command(name="warn", description="Warns a user.")
     @db_check()
     @is_admin()
-    async def warn(self, inter: Interaction, user: discord.Member, reason: str = "No reason provided."):
+    async def warn(
+        self,
+        inter: Interaction,
+        user: discord.Member,
+        reason: str = "No reason provided.",
+    ):
         await inter.response.defer()
         invoker = inter.user
 
@@ -83,5 +96,5 @@ class Warn(commands.Cog):
         await inter.followup.send(f"{user.mention} has been warned!", ephemeral=True)
 
 
-async def setup(bot: 'Sassy'):
+async def setup(bot: "Sassy"):
     await bot.add_cog(Warn(bot))

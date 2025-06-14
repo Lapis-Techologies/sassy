@@ -19,13 +19,19 @@ class Smoke(commands.Cog):
     async def smoke(self, inter: Interaction) -> None:
         user = inter.user
         coins_found = random.randint(0, 5)
-        curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"choomah_coins": 1})
+        curs = await self.bot.user_db.find_one(
+            {"uid": user.id}, projection={"choomah_coins": 1}
+        )
 
         current = curs["choomah_coins"]
         new_bal = current + coins_found
-        await self.bot.user_db.update_one({"uid": user.id}, {"$set": {"choomah_coins": new_bal}})
+        await self.bot.user_db.update_one(
+            {"uid": user.id}, {"$set": {"choomah_coins": new_bal}}
+        )
 
-        await inter.response.send_message(f"You go smoking with Lez and the mates and find **{coins_found}** choomah coins! Your new balance is ***{new_bal}***")
+        await inter.response.send_message(
+            f"You go smoking with Lez and the mates and find **{coins_found}** choomah coins! Your new balance is ***{new_bal}***"
+        )
 
 
 async def setup(bot):

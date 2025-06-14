@@ -28,6 +28,7 @@ def db_check():
             await func(interaction, *args, **kwargs)
 
         return wrapped
+
     return decorator
 
 
@@ -51,6 +52,7 @@ def is_dev():
             await func(interaction, *args, **kwargs)
 
         return wrapped
+
     return decorator
 
 
@@ -74,6 +76,7 @@ def is_admin():
             await func(interaction, *args, **kwargs)
 
         return wrapped
+
     return decorator
 
 
@@ -81,11 +84,12 @@ def in_server():
     def decorator(func):
         async def predicate(interaction: Interaction) -> bool:
             return interaction.guild is None
-    
+
         @wraps(func)
         @check(predicate)
         async def wrapped(interaction: Interaction, *args, **kwargs):
             await func(interaction, *args, **kwargs)
-        
+
         return wrapped
+
     return decorator

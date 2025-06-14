@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class UnBan(commands.Cog):
-    def __init__(self, bot: 'Sassy'):
+    def __init__(self, bot: "Sassy"):
         self.bot = bot
 
     async def checks(self, inter, user) -> bool:
@@ -32,7 +32,12 @@ class UnBan(commands.Cog):
     @app_commands.command(name="unban", description="Unban a user from the server.")
     @db_check()
     @is_admin()
-    async def unban(self, inter: Interaction, user: discord.User, reason: str = "No reason provided."):
+    async def unban(
+        self,
+        inter: Interaction,
+        user: discord.User,
+        reason: str = "No reason provided.",
+    ):
         await inter.response.defer()
 
         if not await self.checks(inter, user):
@@ -42,10 +47,14 @@ class UnBan(commands.Cog):
         guild = self.bot.get_guild(guild)
 
         if guild is None:
-            raise commands.GuildNotFound(f"Failed to find guild with id {self.bot.config.get("guild", "id")}")
+            raise commands.GuildNotFound(
+                f"Failed to find guild with id {self.bot.config.get('guild', 'id')}"
+            )
 
         await guild.unban(user, reason=reason)
-        await inter.followup.send(f"{user.mention} has been unbanned from the server!", ephemeral=True)
+        await inter.followup.send(
+            f"{user.mention} has been unbanned from the server!", ephemeral=True
+        )
 
         curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"logs": 1})
 
@@ -55,5 +64,5 @@ class UnBan(commands.Cog):
         await log(self.bot, inter, LogType.UNBAN, reason)
 
 
-async def setup(bot: 'Sassy'):
+async def setup(bot: "Sassy"):
     await bot.add_cog(UnBan(bot))

@@ -39,7 +39,15 @@ class Field:
         return {"name": self.name, "value": self.value, "inline": self.inline}
 
 
-async def log(bot: "Sassy", interaction: Interaction | None, action: LogType, reason: str | None = None, fields: List[Field] | None | List[dict[str, str | bool]] = None, importancy: Importancy = Importancy.MEDIUM, view: ui.view.View | None = None):
+async def log(
+    bot: "Sassy",
+    interaction: Interaction | None,
+    action: LogType,
+    reason: str | None = None,
+    fields: List[Field] | None | List[dict[str, str | bool]] = None,
+    importancy: Importancy = Importancy.MEDIUM,
+    view: ui.view.View | None = None,
+):
     """
     Helper function to add logs to the log channel
     :param bot:
@@ -63,17 +71,17 @@ async def log(bot: "Sassy", interaction: Interaction | None, action: LogType, re
         LogType.MUTE,
         LogType.UNMUTE,
         LogType.WARN,
-        LogType.REMOVE_WARN
+        LogType.REMOVE_WARN,
     )
 
     colors = {
         Importancy.LOW: 0x00FF00,
         Importancy.MEDIUM: 0xFFD700,
-        Importancy.HIGH: 0xFF0000
+        Importancy.HIGH: 0xFF0000,
     }
 
     embed.color = colors[importancy]
-    
+
     if importancy == Importancy.HIGH:
         role_id = bot.config.get("guild", "roles", "dev")
         content = f"<@&{role_id}>" if role_id is not None else f"<@{bot.owner_id}>"
@@ -83,7 +91,9 @@ async def log(bot: "Sassy", interaction: Interaction | None, action: LogType, re
     if action in moderation_actions:
         # interaction should never be None in this case
         invoker = interaction.user
-        embed.add_field(name="Moderator", value=f"{invoker.mention} (`{invoker.id}`)", inline=False)
+        embed.add_field(
+            name="Moderator", value=f"{invoker.mention} (`{invoker.id}`)", inline=False
+        )
 
         if action not in (LogType.UNMUTE, LogType.REMOVE_WARN):
             embed.add_field(name="Reason", value=f"```{reason}```", inline=False)
@@ -98,7 +108,9 @@ async def log(bot: "Sassy", interaction: Interaction | None, action: LogType, re
             value = field["value"]
             inline = field.get("inline", False)
         else:
-            raise ValueError("Embed Field Must be either a Field object or a dict: {\"name\": str, \"value\": str, \"inline\": bool = False}")
+            raise ValueError(
+                'Embed Field Must be either a Field object or a dict: {"name": str, "value": str, "inline": bool = False}'
+            )
 
         embed.add_field(name=name, value=value, inline=inline)
 

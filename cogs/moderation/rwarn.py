@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class RWarn(commands.Cog):
-    def __init__(self, bot: 'Sassy'):
+    def __init__(self, bot: "Sassy"):
         self.bot = bot
 
     async def checks(self, inter, user, invoker) -> bool:
@@ -48,13 +48,17 @@ class RWarn(commands.Cog):
             await inter.followup.send("Case ID not found!", ephemeral=True)
         else:
             await self.bot.user_db.update_one(
-                {"uid": user.id},
-                {"$pull": {"logs": {"case_id": case_id}}}
+                {"uid": user.id}, {"$pull": {"logs": {"case_id": case_id}}}
             )
             await inter.followup.send("Removed Warning!")
 
-        await log(self.bot, inter, LogType.REMOVE_WARN, fields=[Field("Case ID", f"`{case_id}`", False)])
+        await log(
+            self.bot,
+            inter,
+            LogType.REMOVE_WARN,
+            fields=[Field("Case ID", f"`{case_id}`", False)],
+        )
 
 
-async def setup(bot: 'Sassy'):
+async def setup(bot: "Sassy"):
     await bot.add_cog(RWarn(bot))
