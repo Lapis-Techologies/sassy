@@ -13,7 +13,7 @@
     <img alt="Python Library" src="https://img.shields.io/badge/Library-discord.py-blue">
     <img alt="Platforms" src="https://img.shields.io/badge/Platforms-Windows 10 | Windows 11 | Linux (Debian)-green">
     <img alt="PRs" src="https://img.shields.io/badge/PRs-welcome-green">
-    <img alt="Version" src="https://img.shields.io/badge/Version-2.3.6-green">
+    <img alt="Version" src="https://img.shields.io/badge/Version-2.3.7-green">
     <img alt="Stable" src="https://img.shields.io/badge/Status-Unstable-red">
 </p>
 
@@ -85,7 +85,7 @@ Setup is simple, with almost all configuration done in `config.json`.
       "dev": 1234567890,
       "reactions": {
         "message": 1234567890,
-        "rofl": 1234567890,
+        "rofl": 1234567890,  # REMOVE ME! FORMAT: EMOJI: ROLE
         "1234567890": 1234567890
       }
     },
@@ -107,8 +107,22 @@ Setup is simple, with almost all configuration done in `config.json`.
       "15": 1234567890,
       "20": 1234567890
     }
-  }
+  },
+  "commands": {
+    "poll": {
+      "1": 1234567890,
+      "2": 1234567890,
+      "3": 1234567890,
+      "4": 1234567890,
+      "5": 1234567890,
+      "6": 1234567890,
+      "7": 1234567890,
+      "8": 1234567890,
+      "9": 1234567890,
+      "10": 1234567890
+    }
 }
+
 ```
 
 # Join us!

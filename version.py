@@ -3,4 +3,4 @@
 
 MAJOR = 2
 MINOR = 3
-PATCH = 6
+PATCH = 7
