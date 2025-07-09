@@ -7,9 +7,10 @@ from subprocess import check_output
 from discord import Activity
 from discord.enums import ActivityType
 from discord.ext import commands
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
 from config import botconfig
 from repl import REPL
+from utils.tasks import poll_watcher
 
 
 class Sassy(commands.Bot):
@@ -20,17 +21,13 @@ class Sassy(commands.Bot):
     def __init__(
         self,
         bot_config,
-        user_db,
-        economy_db,
-        starboard_db,
+        database,
         verbose: bool = False,
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
-        self.user_db = user_db
-        self.economy_db = economy_db
-        self.starboard_db = starboard_db
+        self.database = database
         self.verbose = verbose
         self.IGNORE_COMMANDS = []
         self.config: botconfig.BotConfig = bot_config
@@ -43,7 +40,6 @@ class Sassy(commands.Bot):
 
     async def on_ready(self):
         await self.load_cogs()
-
         guild = self.get_guild(int(self.config.get("guild", "id")))
         if guild is None:
             print("Cannot find guild! Check your config file!")
@@ -60,7 +56,7 @@ class Sassy(commands.Bot):
 
         print(f"Logged in as {self.user.name} ({self.user.id})")
 
-        print(f"Now version {self.version} 🎉")
+        await self._get_polls()
 
         await self.change_presence(
             status=None,
@@ -69,6 +65,7 @@ class Sassy(commands.Bot):
             ),
         )
 
+        print(f"Now version {self.version} 🎉")
         await self.loop.create_task(self.repl.run())
 
     async def load_cogs(self):
@@ -108,6 +105,16 @@ class Sassy(commands.Bot):
                         f"Failed to load {module} with error: {e}"
                     ) if self.verbose else None
 
+    async def _get_polls(self):
+        try:
+            polls_db = self.database["polls"]
+            polls = polls_db.find({"finished": {"$ne": True}})
+            async for poll in polls:
+                poll_id = poll["id"]
+                await poll_watcher.watch_poll(self, poll_id)
+        except Exception as e:
+            print(e)
+
 
 def get_version() -> str:
     return str(check_output(["python", "bumper.py", "-q"]).strip(), encoding="utf-8")
@@ -127,12 +134,9 @@ async def main() -> None:
     url = bot_config.get("database", "url")
     name = bot_config.get("database", "name")
 
-    mongo_client = AsyncIOMotorClient(url)
+    mongo_client = AsyncMongoClient(url)
     collection_name = f"{name}-{branch}"
     database = mongo_client[collection_name]
-    user_db = database["user"]
-    economy_db = database["economy"]
-    starboard_db = database["starboard"]
 
     args = sys.argv
 
@@ -142,10 +146,8 @@ async def main() -> None:
         command_prefix=prefix,
         intents=intents,
         bot_config=bot_config,
-        user_db=user_db,
-        economy_db=economy_db,
+        database=database,
         verbose=verbose,
-        starboard_db=starboard_db,
     )
     try:
         await bot.start(token)

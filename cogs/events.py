@@ -1,15 +1,24 @@
 import traceback
 import pathlib
 import discord
+from re import compile
 from io import BytesIO
 from time import time
 from typing import TYPE_CHECKING
 from asyncio import sleep
 from discord.ext import commands
-from discord import app_commands, Interaction
+from discord import (
+    app_commands,
+    Interaction,
+    RawMemberRemoveEvent,
+    RawMessageUpdateEvent,
+    RawReactionActionEvent,
+    Message,
+)
 from utils.dpaste import upload
 from utils.adduser import add
 from utils.log import log, Importancy, LogType, Field
+
 
 if TYPE_CHECKING:
     from main import Sassy
@@ -19,6 +28,16 @@ class Events(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
         self._old_tree_error = None
+        self.uuid4_regex = compile(
+            r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        )  # UUID4
+        self.polling_db = self.bot.database["polls"]
+        self.user_db = self.bot.database["user"]
+        bdir = pathlib.Path("./bumping")
+        bdir.mkdir(exist_ok=True)
+        self.bump_file = bdir / "bump.txt"
+        with open(self.bump_file, "w") as bump_file:
+            bump_file.write("")
 
     def cog_load(self):
         tree = self.bot.tree
@@ -159,6 +178,8 @@ class Events(commands.Cog):
             return
 
         embed = message.embeds[0]
+        if "Bump done!" not in embed.description:
+            return
 
         with open("./resources/oh-yis.gif", "rb") as gif:
             gif = discord.File(fp=BytesIO(gif.read()), filename="oh-yis.gif")
@@ -167,24 +188,50 @@ class Events(commands.Cog):
             f"Thanks for bumping {message.interaction_metadata.user.mention}, I'll remind you to bump again in 2 hours!",
             files=[gif],
         )
+
+        with open(self.bump_file, "w") as bump_file:
+            bump_time = time() + 5 if self.bot.config.get("database", "dev") else 7200
+            bump_file.write(str(bump_time))
+
+        await self.user_db.update_one(
+            {"uid": message.interaction_metadata.user.id}, {"$inc": {"bumps": 1}}
+        )
         await self.bot.loop.create_task(self.bump_task(channel, message))
 
     async def bump_task(self, channel, message) -> None:
-        await sleep(
-            5 if self.bot.config.get("database", "dev") else 7200
-        )  # 5 seconds if developing else 2 hours.
-        with open("./resources/you-fucken-druggah.gif", "rb") as gif:
-            file = discord.File(
-                fp=BytesIO(gif.read()), filename="you-fucken-druggah.gif"
-            )
-            await channel.send(
-                f"{message.interaction_metadata.user.mention} Time to bump you fucken druggah",
-                files=[file],
-            )
+        # Check for file instead of database, saves the extra DB operation and is simpler
+        with open(self.bump_file, "r") as bump_file:
+            bump_time = float(bump_file.read())
+            now = time()
+            time_left = bump_time - now
 
-    async def handle_reaction_event(
-        self, payload: discord.RawReactionActionEvent, remove: bool = False
-    ) -> None:
+            if time_left <= 0:
+                with open("./resources/you-fucken-druggah.gif", "rb") as gif:
+                    file = discord.File(
+                        fp=BytesIO(gif.read()), filename="you-fucken-druggah.gif"
+                    )
+                    await channel.send(
+                        f"{message.interaction_metadata.user.mention} Time to bump you fucken druggah",
+                        files=[file],
+                    )
+            else:
+                await sleep(time_left)
+                with open("./resources/you-fucken-druggah.gif", "rb") as gif:
+                    file = discord.File(
+                        fp=BytesIO(gif.read()), filename="you-fucken-druggah.gif"
+                    )
+                    await channel.send(
+                        f"{message.interaction_metadata.user.mention} Time to bump you fucken druggah",
+                        files=[file],
+                    )
+
+    async def handle_reaction_event(self, payload: RawReactionActionEvent) -> None:
+        guild = self.bot.get_guild(payload.guild_id)
+        member = await guild.fetch_member(payload.user_id)
+
+        if member.bot:
+            return
+
         guild_id = payload.guild_id
 
         if guild_id is None:
@@ -193,9 +240,62 @@ class Events(commands.Cog):
         reaction_message_id = int(
             self.bot.config.get("guild", "roles", "reactions", "message")
         )
-        if payload.message_id != reaction_message_id:
+        if payload.message_id == reaction_message_id:
+            await self.handle_reaction_roles(payload, guild_id)
             return
 
+        channel = self.bot.get_channel(payload.channel_id)
+        message = await channel.fetch_message(payload.message_id)
+        if message.embeds:
+            await self.handle_poll_reaction(payload, message)
+            return
+
+    async def handle_poll_reaction(
+        self, payload: RawReactionActionEvent, message: Message
+    ):
+        embed = message.embeds[0]
+        footer = embed.footer.text
+        parts = footer.split(" | ")
+        if len(parts) != 2:
+            return
+        uuid = parts[1].strip()
+
+        if not self.uuid4_regex.match(uuid):
+            return
+
+        poll = await self.polling_db.find_one({"id": uuid})
+        if poll is None:
+            return
+
+        end_date = int(poll["end_date"])
+        finished = poll["finished"]
+        current_time = time()
+        if (current_time > end_date) or finished:
+            return
+
+        emoji_id = payload.emoji.id
+
+        emojis = {
+            int(emoji_id): idx
+            for idx, (_, emoji_id) in enumerate(
+                self.bot.config.get("commands", "poll").items()
+            )
+        }
+        selected_option = emojis.get(emoji_id)
+
+        if selected_option is None or selected_option >= len(poll["votes"]):
+            return
+
+        if payload.event_type == "REACTION_REMOVE":
+            await self.polling_db.update_one(
+                {"id": uuid}, {"$inc": {f"votes.{selected_option}": -1}}
+            )
+        else:
+            await self.polling_db.update_one(
+                {"id": uuid}, {"$inc": {f"votes.{selected_option}": 1}}
+            )
+
+    async def handle_reaction_roles(self, payload: RawReactionActionEvent, guild_id):
         emoji: str = str(payload.emoji.id) if payload.emoji.id else payload.emoji.name
         roles = self.bot.config.get("guild", "roles", "reactions")
         role_id = roles.get(emoji, None)
@@ -216,14 +316,16 @@ class Events(commands.Cog):
         except discord.NotFound:
             return  # Member not in guild
 
-        if remove:
+        if payload.event_type == "REACTION_REMOVE":
             if role not in member.roles:
                 return
         else:
             if role in member.roles:
                 return
 
-        await member.remove_roles(role) if remove else await member.add_roles(role)
+        await member.remove_roles(
+            role
+        ) if payload.event_type == "REACTION_REMOVE" else await member.add_roles(role)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
@@ -238,7 +340,7 @@ class Events(commands.Cog):
             return
 
         await welcome_channel.send(
-            f"{member.mention} Whats goin on mate? You're druggo #{len(member.guild.members)}, fuckin skits mate"
+            f"{member.mention} Whats goin on mate? You're druggo #{member.guild.member_count}, fuckin skits mate"
         )
 
         await add(bot=self.bot, member=member)
@@ -254,6 +356,28 @@ class Events(commands.Cog):
         )
 
     @commands.Cog.listener()
+    async def on_raw_member_remove(self, payload: RawMemberRemoveEvent):
+        welcome_channel = self.bot.get_channel(
+            self.bot.config.get("guild", "channels", "welcome")
+        )
+
+        if welcome_channel is None or not isinstance(
+            welcome_channel, discord.TextChannel
+        ):
+            await log(
+                self.bot,
+                None,
+                LogType.ERROR,
+                importancy=Importancy.HIGH,
+                fields=[Field("Error", "Failed to get welcome channel!")],
+            )
+
+        server = self.bot.get_guild(payload.guild_id)
+        await welcome_channel.send(
+            f"**{payload.user.name}** left the server, they probably ate a trippa snippa. {server.member_count} druggos left"
+        )
+
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         if message.interaction_metadata:
             if message.author.id == int(
@@ -262,10 +386,12 @@ class Events(commands.Cog):
                 await self.handle_bump(message)
 
     @commands.Cog.listener()
-    async def on_message_edit(
-        self, before: discord.Message, after: discord.Message
-    ) -> None:
-        if before.author.bot:
+    async def on_raw_message_edit(self, payload: RawMessageUpdateEvent) -> None:
+        before = payload.cached_message
+        after = payload.message
+        if before is None:
+            before = "UNABLE TO CACHE MESSAGE"
+        if after.author.bot:
             return
         # Ignore discord content servers
         elif before.content == after.content:
@@ -276,10 +402,10 @@ class Events(commands.Cog):
             None,
             LogType.MESSAGE_EDIT,
             fields=[
-                Field("User", f"{before.author.mention}", False),
+                Field("User", f"{after.author.mention}", False),
                 Field(
                     "Before",
-                    f"```{before.content}```" if before.content else "!!No Content.!!",
+                    f"```{before.content}```" if before.content else "_ _",  # Nothing
                     False,
                 ),
                 Field("After", f"```{after.content}```", False),
@@ -323,13 +449,13 @@ class Events(commands.Cog):
     async def on_raw_reaction_add(
         self, payload: discord.RawReactionActionEvent
     ) -> None:
-        await self.handle_reaction_event(payload, False)
+        await self.handle_reaction_event(payload)
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(
         self, payload: discord.RawReactionActionEvent
     ) -> None:
-        await self.handle_reaction_event(payload, True)
+        await self.handle_reaction_event(payload)
 
 
 async def setup(bot):

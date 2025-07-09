@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 class Smoke(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
+        self.user_db = self.bot.database["user"]
 
     @app_commands.command(name="smoke", description="Smoke a quick one with Lez.")
     @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
@@ -19,13 +20,13 @@ class Smoke(commands.Cog):
     async def smoke(self, inter: Interaction) -> None:
         user = inter.user
         coins_found = random.randint(0, 5)
-        curs = await self.bot.user_db.find_one(
+        curs = await self.user_db.find_one(
             {"uid": user.id}, projection={"choomah_coins": 1}
         )
 
         current = curs["choomah_coins"]
         new_bal = current + coins_found
-        await self.bot.user_db.update_one(
+        await self.user_db.update_one(
             {"uid": user.id}, {"$set": {"choomah_coins": new_bal}}
         )
 

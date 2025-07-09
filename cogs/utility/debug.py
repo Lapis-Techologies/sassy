@@ -21,9 +21,7 @@ class Debug(commands.Cog):
             Path("config/"),
             Path("cogs/"),
         ]
-        self.banned = [
-            '__pycache__'
-        ]
+        self.banned = ["__pycache__"]
 
     @commands.is_owner()
     @app_commands.command(

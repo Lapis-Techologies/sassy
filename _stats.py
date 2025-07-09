@@ -25,7 +25,10 @@ class ProjectReader:
                     file_lines, file_size, new_longest_file = self._handle_file(
                         path, longest_file
                     )
-                    lines += file_lines
+                    if file_lines == -1:
+                        failed += 1
+
+                    lines += file_lines if file_lines != -1 else 0
                     size += file_size
                     if new_longest_file:
                         longest_file = new_longest_file
@@ -93,7 +96,10 @@ class ProjectReader:
                     file_lines, file_size, new_longest_file = self._handle_file(
                         file, longest_file
                     )
-                    dir_lines += file_lines
+                    if file_lines == -1:
+                        dir_failed += 1
+
+                    dir_lines += file_lines if file_lines != -1 else 0
                     dir_size += file_size
                     if new_longest_file:
                         longest_file = new_longest_file
@@ -124,7 +130,7 @@ class ProjectReader:
             try:
                 file_lines = len(file.readlines())
             except UnicodeDecodeError:
-                file_lines = 0
+                file_lines = -1
             size = path.stat().st_size
         return file_lines, size
 

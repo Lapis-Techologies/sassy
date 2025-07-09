@@ -15,11 +15,12 @@ if TYPE_CHECKING:
 class Ban(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
+        self.user_db = self.bot.database["user"]
 
     async def add_ban(self, inter, user, reason, invoker) -> None:
         case_id = str(uuid4())
 
-        await self.bot.user_db.update_one(
+        await self.user_db.update_one(
             {"uid": user.id},
             {
                 "$push": {

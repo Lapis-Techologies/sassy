@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 class XPHandler(Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
+        self.user_db = self.bot.database["user"]
         self.rewards = sorted(
             [
                 (int(level), role)
@@ -94,7 +95,7 @@ class XPHandler(Cog):
     async def update_member(
         self, member: Member, xp: int, level_new: int, last_message_time: float
     ) -> None:
-        await self.bot.user_db.update_one(
+        await self.user_db.update_one(
             {"uid": member.id},
             {"$set": {"xp": xp, "level": level_new, "last_message": last_message_time}},
         )
@@ -113,7 +114,7 @@ class XPHandler(Cog):
         if message.author.bot:
             return
 
-        curs = await self.bot.user_db.find_one(
+        curs = await self.user_db.find_one(
             {"uid": message.author.id},
             projection={"xp": 1, "level": 1, "last_message": 1},
         )
@@ -134,7 +135,7 @@ class XPHandler(Cog):
 
         xp_new, level_new = self.add_xp(xp, level)
 
-        await self.bot.user_db.update_one(
+        await self.user_db.update_one(
             {"uid": message.author.id},
             {
                 "$set": {

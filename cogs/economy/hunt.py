@@ -12,12 +12,13 @@ if TYPE_CHECKING:
 class Hunt(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot: "Sassy" = bot
+        self.user_db = self.bot.database["user"]
 
     def roll(self, range: int) -> int:
         return random.randint(-range, range)
 
     async def update(self, user: User | Member, offset: int) -> tuple[int, int]:
-        curs = await self.bot.user_db.find_one(
+        curs = await self.user_db.find_one(
             {"uid": user.id}, projection={"choomah_coins": 1}
         )
 
@@ -28,7 +29,7 @@ class Hunt(commands.Cog):
             difference = offset
         new_bal = new_bal if new_bal >= 0 else 0
 
-        await self.bot.user_db.update_one(
+        await self.user_db.update_one(
             {"uid": user.id}, {"$set": {"choomah_coins": new_bal}}
         )
 

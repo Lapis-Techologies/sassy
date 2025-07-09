@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 class UserInfo(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
+        self.user_db = self.bot.database["user"]
 
     def make_embeds(self, logs, member, embed) -> list[discord.Embed]:
         embeds = []
@@ -57,9 +58,7 @@ class UserInfo(commands.Cog):
             url=member.avatar.url or member.default_avatar.url
         ) if member.avatar is not None else None
 
-        curs = await self.bot.user_db.find_one(
-            {"uid": member.id}, projection={"logs": 1}
-        )
+        curs = await self.user_db.find_one({"uid": member.id}, projection={"logs": 1})
 
         if curs is None:
             await add(bot=self.bot, member=member)

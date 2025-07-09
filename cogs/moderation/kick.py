@@ -15,10 +15,11 @@ if TYPE_CHECKING:
 class Kick(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
+        self.user_db = self.bot.database["user"]
 
     async def add_kick(self, inter, invoker, user, reason) -> None:
         case_id = str(uuid4())
-        await self.bot.user_db.update_one(
+        await self.user_db.update_one(
             {"uid": user.id},
             {
                 "$push": {
@@ -75,7 +76,7 @@ class Kick(commands.Cog):
 
         await user.kick(reason=reason)
         await inter.followup.send(
-            f"hehe, got em. (banned {user.mention})", ephemeral=True
+            f"hehe, got em. (kicked {user.mention})", ephemeral=True
         )
         await self.add_kick(inter, invoker, user, reason)
 
