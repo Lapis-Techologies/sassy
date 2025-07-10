@@ -332,6 +332,12 @@ class Events(commands.Cog):
         welcome_channel = self.bot.get_channel(
             self.bot.config.get("guild", "channels", "welcome")
         )
+        rules_channel = self.bot.get_channel(
+            self.bot.config.get("guild", "channels", "rules")
+        )
+        reaction_role_channel = self.bot.get_channel(
+            self.bot.config.get("guild", "channels", "reaction_role")
+        )
 
         if welcome_channel is None or not isinstance(
             welcome_channel, discord.TextChannel
@@ -340,7 +346,7 @@ class Events(commands.Cog):
             return
 
         await welcome_channel.send(
-            f"{member.mention} Whats goin on mate? You're druggo #{member.guild.member_count}, fuckin skits mate"
+            f"{member.mention} Whats goin on mate? You're druggo #{member.guild.member_count}, fuckin skits mate. Check out the {rules_channel.mention} and select your favorite characcter in {reaction_role_channel.mention}!"
         )
 
         await add(bot=self.bot, member=member)

@@ -13,7 +13,7 @@
     <img alt="Python Library" src="https://img.shields.io/badge/Library-discord.py-blue">
     <img alt="Platforms" src="https://img.shields.io/badge/Platforms-Windows 10 | Windows 11 | Linux (Debian)-green">
     <img alt="PRs" src="https://img.shields.io/badge/PRs-welcome-green">
-    <img alt="Version" src="https://img.shields.io/badge/Version-2.3.7-green">
+    <img alt="Version" src="https://img.shields.io/badge/Version-2.3.8-green">
     <img alt="Stable" src="https://img.shields.io/badge/Status-Unstable-red">
 </p>
 
@@ -59,11 +59,6 @@ Setup is simple, with almost all configuration done in `config.json`.
 2. Set `dev` to `true` if developing the bot; otherwise, set it to `false`.
 3. Set `url` to your database URL (e.g., `mongodb://localhost:27017/`).
 4. Set `name` to your database name (e.g., `sassy`).
-5. Create a database named `NAME-prod`. If developing, also create a `NAME-dev` database (e.g., for `sassy`, create `sassy-prod` and `sassy-dev`).
-6. Create three collections in both databases with the following names:
-    - `economy`
-    - `starboard`
-    - `user`
 
 ### Example
 ```json

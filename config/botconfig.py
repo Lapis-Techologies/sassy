@@ -47,6 +47,8 @@ class BotConfig(ConfigHandler):
                     "logs": SchemaValidator.is_int,
                     "drops": SchemaValidator.is_int,
                     "starboard": SchemaValidator.is_int,
+                    "reaction_role": SchemaValidator.is_int,
+                    "rules": SchemaValidator.is_int,
                     "bump": {
                         "id": SchemaValidator.is_int,
                         "bot": SchemaValidator.is_int,
