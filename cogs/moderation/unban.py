@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 class UnBan(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
+        self.user_db = self.bot.database["user"]
 
     async def checks(self, inter, user) -> bool:
         invoker = inter.user
@@ -56,7 +57,7 @@ class UnBan(commands.Cog):
             f"{user.mention} has been unbanned from the server!", ephemeral=True
         )
 
-        curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"logs": 1})
+        curs = await self.user_db.find_one({"uid": user.id}, projection={"logs": 1})
 
         if curs is None:
             await add(bot=self.bot, member=user)

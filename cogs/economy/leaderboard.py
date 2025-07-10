@@ -11,35 +11,43 @@ if TYPE_CHECKING:
 class Leaderboard(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
+        self.user_db = self.bot.database["user"]
 
-    async def top(self, amount: int, search: str) -> Embed:
-        curs = self.bot.user_db.aggregate(
+    async def top(self, amount: int) -> Embed:
+        curs = await self.user_db.aggregate(
             [
-                {"$sort": {search: -1}},
+                {
+                    "$addFields": {
+                        "overall_score": {
+                            "$add": [
+                                {"$multiply": ["$level", 1]},
+                                {"$multiply": ["$choomah_coins", 0.5]},
+                                {"$multiply": ["$bumps", 1.1]},
+                            ]
+                        }
+                    }
+                },
+                {"$sort": {"overall_score": -1}},
                 {"$limit": amount},
-                {"$project": {search: 1, "uid": 1}},
+                {"$project": {"uid": 1, "overall_score": 1}},
             ]
         )
-
         embed = Embed(
-            title=f"Leaderboard - {search.replace('_', ' ').title()}",
+            title="Leaderboard",
             description=f"Top {amount} Users",
             color=0x00FF00,
         )
 
-        i = 1
-        for entry in await curs.to_list(length=None):
+        for i, entry in enumerate(await curs.to_list(length=None)):
             user = self.bot.get_user(entry["uid"])
             if user is None:
                 continue
 
-            value = entry[search]
             embed.add_field(
-                name=f"{i}. {user.name}",
-                value=f"{search.replace('_', ' ').title()}: ***{value}***",
+                name=f"{i + 1}. {user.name}",
+                value=f"Score: ***{entry['overall_score']}***",
                 inline=False,
             )
-            i += 1
 
         return embed
 
@@ -50,10 +58,8 @@ class Leaderboard(commands.Cog):
     @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
     @db_check()
     async def leaderboard(self, inter: Interaction) -> None:
-        choomah_coins = await self.top(10, "choomah_coins")
-        levels = await self.top(10, "level")
-
-        await inter.response.send_message(embeds=[choomah_coins, levels])
+        embed = await self.top(10)
+        await inter.response.send_message(embed=embed)
 
 
 async def setup(bot):

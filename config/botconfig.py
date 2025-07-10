@@ -47,6 +47,8 @@ class BotConfig(ConfigHandler):
                     "logs": SchemaValidator.is_int,
                     "drops": SchemaValidator.is_int,
                     "starboard": SchemaValidator.is_int,
+                    "reaction_role": SchemaValidator.is_int,
+                    "rules": SchemaValidator.is_int,
                     "bump": {
                         "id": SchemaValidator.is_int,
                         "bot": SchemaValidator.is_int,
@@ -54,6 +56,20 @@ class BotConfig(ConfigHandler):
                 },
             },
             "xp": {"rewards": (SchemaValidator.is_numeric_str, SchemaValidator.is_int)},
+            "commands": {
+                "poll": {
+                    "1": SchemaValidator.is_int,
+                    "2": SchemaValidator.is_int,
+                    "3": SchemaValidator.is_int,
+                    "4": SchemaValidator.is_int,
+                    "5": SchemaValidator.is_int,
+                    "6": SchemaValidator.is_int,
+                    "7": SchemaValidator.is_int,
+                    "8": SchemaValidator.is_int,
+                    "9": SchemaValidator.is_int,
+                    "10": SchemaValidator.is_int,
+                }
+            },
         }
 
     def set_config(self, config_obj: Union[str, dict, Any]) -> None:

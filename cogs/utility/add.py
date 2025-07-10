@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 class Add(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
+        self.user_db = self.bot.database["user"]
 
     @app_commands.command(name="add", description="Adds a user to the database.")
     @is_admin()
@@ -24,7 +25,7 @@ class Add(commands.Cog):
         if isinstance(invoker, User):
             return
 
-        curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"uid": 1})
+        curs = await self.user_db.find_one({"uid": user.id}, projection={"uid": 1})
 
         if curs is not None:
             message = "User already exists in the database!"

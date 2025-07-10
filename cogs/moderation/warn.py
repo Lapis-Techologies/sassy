@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 class Warn(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
+        self.user_db = self.bot.database["user"]
 
     async def checks(self, inter, user) -> bool:
         admin = inter.guild.get_role(self.bot.config.get("guild", "roles", "admin"))
@@ -35,7 +36,7 @@ class Warn(commands.Cog):
         return True
 
     async def add_warning(self, inter, user, invoker, case_id, reason) -> None:
-        curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"logs": 1})
+        curs = await self.user_db.find_one({"uid": user.id}, projection={"logs": 1})
 
         if curs is None:
             await add(
@@ -52,7 +53,7 @@ class Warn(commands.Cog):
                 ],
             )
         else:
-            await self.bot.user_db.update_one(
+            await self.user_db.update_one(
                 {"uid": user.id},
                 {
                     "$push": {

@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 class Bal(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
+        self.user_database = self.bot.database["user"]
 
     @app_commands.command(name="bal", description="Check yer balance m8")
     @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
@@ -21,7 +22,7 @@ class Bal(commands.Cog):
         """
         user = inter.user
 
-        curs = await self.bot.user_db.find_one(
+        curs = await self.user_database.find_one(
             {"uid": user.id}, projection={"choomah_coins": 1}
         )
 

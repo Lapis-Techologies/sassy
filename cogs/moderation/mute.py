@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 class Mute(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
+        self.user_db = self.bot.database["user"]
 
     async def add_mute(
         self,
@@ -28,7 +29,7 @@ class Mute(commands.Cog):
         case_id = str(uuid4())
         invoker = inter.user
 
-        await self.bot.user_db.update_one(
+        await self.user_db.update_one(
             {"uid": user.id},
             {
                 "$push": {

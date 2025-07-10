@@ -13,9 +13,10 @@ if TYPE_CHECKING:
 class Mutes(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
+        self.user_db = self.bot.database["user"]
 
     async def find_case_by_id(self, case_id, interaction, member):
-        curs = await self.bot.user_db.find_one(
+        curs = await self.user_db.find_one(
             {"uid": member.id},
             projection={"logs": {"$elemMatch": {"case_id": case_id}}},
         )
@@ -60,7 +61,8 @@ class Mutes(commands.Cog):
                 }
             },
         ]
-        users = await self.bot.user_db.aggregate(pipeline).to_list(None)
+        users = await self.user_db.aggregate(pipeline)
+        users = await users.to_list(None)
         cases = [log for user in users for log in user.get("logs", [])]
 
         if not cases:

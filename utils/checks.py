@@ -14,9 +14,10 @@ def db_check():
         async def predicate(interaction: Interaction) -> bool:
             user = interaction.user
             bot: "Sassy" = interaction.client
+            user_db = bot.database["user"]
 
             # Check if user exists in the database
-            curs = await bot.user_db.find_one({"uid": user.id}, projection={"uid": 1})
+            curs = await user_db.find_one({"uid": user.id}, projection={"uid": 1})
             if curs is None:
                 await add(bot, user)
 

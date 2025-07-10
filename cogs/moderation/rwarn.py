@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 class RWarn(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
+        self.user_db = self.bot.database["user"]
 
     async def checks(self, inter, user, invoker) -> bool:
         admin = self.bot.config.get("guild", "roles", "admin")
@@ -41,13 +42,13 @@ class RWarn(commands.Cog):
         elif isinstance(invoker, User):
             return
 
-        curs = await self.bot.user_db.find_one({"uid": user.id}, projection={"logs": 1})
+        curs = await self.user_db.find_one({"uid": user.id}, projection={"logs": 1})
 
         if curs is None:
             await add(bot=self.bot, member=user)
             await inter.followup.send("Case ID not found!", ephemeral=True)
         else:
-            await self.bot.user_db.update_one(
+            await self.user_db.update_one(
                 {"uid": user.id}, {"$pull": {"logs": {"case_id": case_id}}}
             )
             await inter.followup.send("Removed Warning!")

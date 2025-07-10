@@ -13,7 +13,7 @@
     <img alt="Python Library" src="https://img.shields.io/badge/Library-discord.py-blue">
     <img alt="Platforms" src="https://img.shields.io/badge/Platforms-Windows 10 | Windows 11 | Linux (Debian)-green">
     <img alt="PRs" src="https://img.shields.io/badge/PRs-welcome-green">
-    <img alt="Version" src="https://img.shields.io/badge/Version-2.3.4-green">
+    <img alt="Version" src="https://img.shields.io/badge/Version-2.3.8-green">
     <img alt="Stable" src="https://img.shields.io/badge/Status-Unstable-red">
 </p>
 
@@ -59,11 +59,6 @@ Setup is simple, with almost all configuration done in `config.json`.
 2. Set `dev` to `true` if developing the bot; otherwise, set it to `false`.
 3. Set `url` to your database URL (e.g., `mongodb://localhost:27017/`).
 4. Set `name` to your database name (e.g., `sassy`).
-5. Create a database named `NAME-prod`. If developing, also create a `NAME-dev` database (e.g., for `sassy`, create `sassy-prod` and `sassy-dev`).
-6. Create three collections in both databases with the following names:
-    - `economy`
-    - `starboard`
-    - `user`
 
 ### Example
 ```json
@@ -85,7 +80,7 @@ Setup is simple, with almost all configuration done in `config.json`.
       "dev": 1234567890,
       "reactions": {
         "message": 1234567890,
-        "rofl": 1234567890,
+        "rofl": 1234567890,  # REMOVE ME! FORMAT: EMOJI: ROLE
         "1234567890": 1234567890
       }
     },
@@ -107,8 +102,22 @@ Setup is simple, with almost all configuration done in `config.json`.
       "15": 1234567890,
       "20": 1234567890
     }
-  }
+  },
+  "commands": {
+    "poll": {
+      "1": 1234567890,
+      "2": 1234567890,
+      "3": 1234567890,
+      "4": 1234567890,
+      "5": 1234567890,
+      "6": 1234567890,
+      "7": 1234567890,
+      "8": 1234567890,
+      "9": 1234567890,
+      "10": 1234567890
+    }
 }
+
 ```
 
 # Join us!
