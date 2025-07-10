@@ -190,7 +190,7 @@ class Events(commands.Cog):
         )
 
         with open(self.bump_file, "w") as bump_file:
-            bump_time = time() + 5 if self.bot.config.get("database", "dev") else 7200
+            bump_time = time() + (5 if self.bot.config.get("database", "dev") else 7200)
             bump_file.write(str(bump_time))
 
         await self.user_db.update_one(
