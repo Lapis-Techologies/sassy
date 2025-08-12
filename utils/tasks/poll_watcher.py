@@ -8,7 +8,22 @@ if TYPE_CHECKING:
     from main import Sassy
 
 
-async def watch_poll(bot: "Sassy", poll_id: str) -> None:
+async def watch_polls(bot: "Sassy"):
+    try:
+        polls_db = bot.database["polls"]
+        polls = polls_db.find({"finished": {"$ne": True}})
+    except Exception as e:
+        print(e)
+
+    async for poll in polls:
+        try:
+            poll_id = poll["id"]
+            await _watch_poll(bot, poll_id)
+        except Exception as e:
+            print(e)
+
+
+async def _watch_poll(bot: "Sassy", poll_id: str) -> None:
     polls_db = bot.database["polls"]
     poll = await polls_db.find_one({"id": poll_id})
     end_date = poll["end_date"]

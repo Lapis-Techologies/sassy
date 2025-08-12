@@ -10,7 +10,7 @@ from discord.ext import commands
 from pymongo import AsyncMongoClient
 from config import botconfig
 from repl import REPL
-from utils.tasks import poll_watcher
+from utils.tasks.poll_watcher import watch_polls
 
 
 class Sassy(commands.Bot):
@@ -30,24 +30,43 @@ class Sassy(commands.Bot):
         self.database = database
         self.verbose = verbose
         self.IGNORE_COMMANDS = []
+        self.guild = None
         self.config: botconfig.BotConfig = bot_config
         self.version = get_version()
         self.repl = REPL(self)
         self.remove_command("help")
+        self._booted = False
 
     def reload_config(self) -> None:
         self.config.set_config("config.json")
 
     async def on_ready(self):
+        # Prevent double syncing
+        # https://github.com/Rapptz/discord.py/discussions/7884
+        if self._booted:
+            if self.guild:
+                self.tree.clear_commands(guild=self.guild)
+                await self.tree.sync(guild=self.guild)
+            return
+        self._booted = True
+
+        tasks = [{"poll": watch_polls}]
+
+        print(f"Running {len(tasks)} Task(s)")
+        for task in tasks:
+            for task_name, task_function in task.items():
+                print(f"  > Running {task_name}")
+                await task_function(self)
+
         await self.load_cogs()
-        guild = self.get_guild(int(self.config.get("guild", "id")))
-        if guild is None:
+        self.guild = self.get_guild(int(self.config.get("guild", "id")))
+        if self.guild is None:
             print("Cannot find guild! Check your config file!")
             sys.exit(1)
         self.tree.copy_global_to(
-            guild=guild
+            guild=self.guild
         )  # https://stackoverflow.com/a/75236448/19119462
-        synced = len(await self.tree.sync(guild=guild))
+        synced = len(await self.tree.sync(guild=self.guild))
         print(f"Synced {synced} commands!")
 
         if self.user is None:
@@ -55,8 +74,6 @@ class Sassy(commands.Bot):
             sys.exit(1)
 
         print(f"Logged in as {self.user.name} ({self.user.id})")
-
-        await self._get_polls()
 
         await self.change_presence(
             status=None,
@@ -90,6 +107,8 @@ class Sassy(commands.Bot):
             elif item.name.startswith("IGNORE_"):
                 continue
             elif item.is_dir():
+                if item.stem == "dev" and not bool(self.config.get("database", "dev")):
+                    continue
                 await self._process_folder(item, f"{path_start}.{item.name}")
             elif item.is_file() and item.suffix == ".py":
                 if item.name in self.IGNORE_COMMANDS:
@@ -104,16 +123,6 @@ class Sassy(commands.Bot):
                     print(
                         f"Failed to load {module} with error: {e}"
                     ) if self.verbose else None
-
-    async def _get_polls(self):
-        try:
-            polls_db = self.database["polls"]
-            polls = polls_db.find({"finished": {"$ne": True}})
-            async for poll in polls:
-                poll_id = poll["id"]
-                await poll_watcher.watch_poll(self, poll_id)
-        except Exception as e:
-            print(e)
 
 
 def get_version() -> str:

@@ -16,7 +16,7 @@ class Link(commands.Cog):
     @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
     @db_check()
     async def link(self, interaction: Interaction) -> None:
-        message = f"""Sure thing mate!
+        message = """Sure thing mate!
 [The Big Lez Show](<https://www.youtube.com/playlist?list=PLGMC7oz7XpmCR1RWxqvFWvXVO_ry6FdHI>)
 [Sassy The Sasquatch](<https://www.youtube.com/playlist?list=PLGMC7oz7XpmDMGrALMQiNXCi9p7aqkWbj>)
 [The Donny & Clarence Show](<https://www.youtube.com/playlist?list=PLGMC7oz7XpmCtkIuJWW4vUECBrw5iEIqn>)

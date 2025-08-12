@@ -19,7 +19,7 @@ class Mute(commands.Cog):
 
     async def add_mute(
         self,
-        inter: Interaction,
+        interaction: Interaction,
         user: discord.Member,
         days: int,
         hours: int,
@@ -27,7 +27,7 @@ class Mute(commands.Cog):
         reason: str = "No reason provided.",
     ) -> None:
         case_id = str(uuid4())
-        invoker = inter.user
+        invoker = interaction.user
 
         await self.user_db.update_one(
             {"uid": user.id},
@@ -46,7 +46,7 @@ class Mute(commands.Cog):
 
         await log(
             self.bot,
-            inter,
+            interaction,
             LogType.MUTE,
             reason,
             [
@@ -57,37 +57,37 @@ class Mute(commands.Cog):
 
     async def checks(
         self,
-        inter: Interaction,
+        interaction: Interaction,
         user: discord.Member,
         days: int,
         hours: int,
         minutes: int,
     ) -> bool:
-        admin = inter.guild.get_role(self.bot.config.get("guild", "roles", "admin"))
-        invoker = inter.user
+        admin = interaction.guild.get_role(self.bot.config.get("guild", "roles", "admin"))
+        invoker = interaction.user
         # Discord strangely forces max timeout time to be 28 days ?
         total_time_seconds = (days * 86400) + (hours * 3600) + (minutes * 60)
         if isinstance(invoker, User):
             return False
         elif admin in user.roles:
-            await inter.followup.send("You cannot mute an admin!", ephemeral=True)
+            await interaction.followup.send("You cannot mute an admin!", ephemeral=True)
             return False
         elif user == invoker:
-            await inter.followup.send("You cannot mute yourself!", ephemeral=True)
+            await interaction.followup.send("You cannot mute yourself!", ephemeral=True)
             return False
         elif user.id == self.bot.user.id:
-            await inter.followup.send("hehe you can't mute me mate!", ephemeral=True)
+            await interaction.followup.send("hehe you can't mute me mate!", ephemeral=True)
             return False
         elif user.is_timed_out():
-            await inter.followup.send("This user is already muted!", ephemeral=True)
+            await interaction.followup.send("This user is already muted!", ephemeral=True)
             return False
         elif days == 0 and hours == 0 and minutes == 0:
-            await inter.followup.send(
+            await interaction.followup.send(
                 "You must specify a time to mute the user for!", ephemeral=True
             )
             return False
         elif total_time_seconds > 2419200:  # 28 days in seconds
-            await inter.followup.send("Sorry, maximum mute time is 28 days!")
+            await interaction.followup.send("Sorry, maximum mute time is 28 days!")
             return False
         else:
             return True
@@ -96,22 +96,29 @@ class Mute(commands.Cog):
         name="mute",
         description="Mutes a specified user for a specified amount of time.",
     )
+    @app_commands.describe(
+        user="The user to mute.",
+        days="How many days should the mute last? Default 0.",
+        hours="How many hours should the mute last? Default 0.",
+        minutes="How many minutes should the mute last? Default 0.",
+        reason='The reason for the mute. Defaults to "No reason provided."',
+    )
     @db_check()
     @is_admin()
     async def mute(
         self,
-        inter: Interaction,
+        interaction: Interaction,
         user: discord.Member,
         days: int = 0,
         hours: int = 0,
         minutes: int = 0,
         reason: str = "No reason provided.",
     ) -> None:
-        await inter.response.defer()
+        await interaction.response.defer()
 
         time = (days * 86400) + (hours * 3600) + (minutes * 60)
 
-        if not await self.checks(inter, user, days, hours, minutes):
+        if not await self.checks(interaction, user, days, hours, minutes):
             return
 
         await user.timeout(
@@ -119,11 +126,11 @@ class Mute(commands.Cog):
             reason=reason,
         )
 
-        await inter.followup.send(
+        await interaction.followup.send(
             f"{user} has been muted for {days} days, {hours} hours, and {minutes} minutes for `{reason}`.",
             ephemeral=True,
         )
-        await self.add_mute(inter, user, days, hours, minutes, reason)
+        await self.add_mute(interaction, user, days, hours, minutes, reason)
 
 
 async def setup(bot: "Sassy"):

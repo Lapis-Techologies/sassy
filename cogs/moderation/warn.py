@@ -18,24 +18,24 @@ class Warn(commands.Cog):
         self.bot = bot
         self.user_db = self.bot.database["user"]
 
-    async def checks(self, inter, user) -> bool:
-        admin = inter.guild.get_role(self.bot.config.get("guild", "roles", "admin"))
-        invoker = inter.user
+    async def checks(self, interaction, user) -> bool:
+        admin = interaction.guild.get_role(self.bot.config.get("guild", "roles", "admin"))
+        invoker = interaction.user
 
         if isinstance(invoker, User):
             return False
         elif admin in user.roles:
-            await inter.followup.send("You cannot warn an admin!", ephemeral=True)
+            await interaction.followup.send("You cannot warn an admin!", ephemeral=True)
             return False
         elif user == invoker:
-            await inter.followup.send("You cannot warn yourself!", ephemeral=True)
+            await interaction.followup.send("You cannot warn yourself!", ephemeral=True)
             return False
         elif user.id == self.bot.user.id:
-            await inter.followup.send("hehe you can't warn me mate!", ephemeral=True)
+            await interaction.followup.send("hehe you can't warn me mate!", ephemeral=True)
             return False
         return True
 
-    async def add_warning(self, inter, user, invoker, case_id, reason) -> None:
+    async def add_warning(self, interaction, user, invoker, case_id, reason) -> None:
         curs = await self.user_db.find_one({"uid": user.id}, projection={"logs": 1})
 
         if curs is None:
@@ -70,31 +70,34 @@ class Warn(commands.Cog):
 
         await log(
             self.bot,
-            inter,
+            interaction,
             LogType.WARN,
             reason,
             [Field("Case ID", f"`{case_id}`", False)],
         )
 
     @app_commands.command(name="warn", description="Warns a user.")
+    @app_commands.describe(
+        user="The user to warn.", reason="The reason for the warning."
+    )
     @db_check()
     @is_admin()
     async def warn(
         self,
-        inter: Interaction,
+        interaction: Interaction,
         user: discord.Member,
         reason: str = "No reason provided.",
     ):
-        await inter.response.defer()
-        invoker = inter.user
+        await interaction.response.defer()
+        invoker = interaction.user
 
-        if not await self.checks(inter, user):
+        if not await self.checks(interaction, user):
             return
 
         case_id = str(uuid4())
 
-        await self.add_warning(inter, user, invoker, case_id, reason)
-        await inter.followup.send(f"{user.mention} has been warned!", ephemeral=True)
+        await self.add_warning(interaction, user, invoker, case_id, reason)
+        await interaction.followup.send(f"{user.mention} has been warned!", ephemeral=True)
 
 
 async def setup(bot: "Sassy"):

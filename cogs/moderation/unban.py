@@ -16,32 +16,35 @@ class UnBan(commands.Cog):
         self.bot = bot
         self.user_db = self.bot.database["user"]
 
-    async def checks(self, inter, user) -> bool:
-        invoker = inter.user
+    async def checks(self, interaction, user) -> bool:
+        invoker = interaction.user
 
         if not isinstance(user, User):
-            await inter.followup.send("You cannot ban a member that isnt banned!")
+            await interaction.followup.send("You cannot ban a member that isnt banned!")
             return False
         elif user == invoker:
-            await inter.followup.send("You cant use this if youre banned!")
+            await interaction.followup.send("You cant use this if youre banned!")
             return False
         elif user.id == self.bot.user.id:
-            await inter.followup.send("Im not banned!")
+            await interaction.followup.send("Im not banned!")
             return False
         return True
 
     @app_commands.command(name="unban", description="Unban a user from the server.")
+    @app_commands.describe(
+        user="The user to unban.", reason="The reason for unbanning them."
+    )
     @db_check()
     @is_admin()
     async def unban(
         self,
-        inter: Interaction,
+        interaction: Interaction,
         user: discord.User,
         reason: str = "No reason provided.",
     ):
-        await inter.response.defer()
+        await interaction.response.defer()
 
-        if not await self.checks(inter, user):
+        if not await self.checks(interaction, user):
             return
 
         guild = self.bot.config.get("guild", "id")
@@ -53,7 +56,7 @@ class UnBan(commands.Cog):
             )
 
         await guild.unban(user, reason=reason)
-        await inter.followup.send(
+        await interaction.followup.send(
             f"{user.mention} has been unbanned from the server!", ephemeral=True
         )
 
@@ -62,7 +65,7 @@ class UnBan(commands.Cog):
         if curs is None:
             await add(bot=self.bot, member=user)
 
-        await log(self.bot, inter, LogType.UNBAN, reason)
+        await log(self.bot, interaction, LogType.UNBAN, reason)
 
 
 async def setup(bot: "Sassy"):

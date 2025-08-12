@@ -16,6 +16,7 @@ class Fail(commands.Cog):
         name="fail",
         description="A command that always fails on purpose. Raises either Exception, OSError, or TypeError.",
     )
+    @app_commands.describe(message="The message to send.")
     @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
     @db_check()
     @is_admin()

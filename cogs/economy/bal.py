@@ -16,17 +16,17 @@ class Bal(commands.Cog):
     @app_commands.command(name="bal", description="Check yer balance m8")
     @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
     @db_check()
-    async def bal(self, inter: Interaction) -> None:
+    async def bal(self, interaction: Interaction) -> None:
         """
         Check your balance
         """
-        user = inter.user
+        user = interaction.user
 
         curs = await self.user_database.find_one(
             {"uid": user.id}, projection={"choomah_coins": 1}
         )
 
-        await inter.response.send_message(
+        await interaction.response.send_message(
             f"You have **{curs['choomah_coins']}** choomah coins!"
         )
 

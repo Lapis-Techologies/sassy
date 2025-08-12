@@ -38,12 +38,12 @@ class Hunt(commands.Cog):
     @app_commands.command(
         name="hunt", description="Go hunting with sassy on choomah island"
     )
-    @app_commands.checks.cooldown(1, 30, key=lambda i: (i.guild_id, i.user.id))
+    @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
     @db_check()
-    async def hunt(self, inter: Interaction) -> None:
-        await inter.response.defer()
+    async def hunt(self, interaction: Interaction) -> None:
+        await interaction.response.defer()
 
-        user = inter.user
+        user = interaction.user
 
         offset = self.roll(15)
         new_bal, diff = await self.update(user, offset)
@@ -55,7 +55,7 @@ class Hunt(commands.Cog):
         else:
             message = f"\\*You go to Choomah Island* You Lost __**{abs(diff)}**__ Choomah Coins."
 
-        await inter.followup.send(f"{message}\nYour balance is now **{new_bal}**.")
+        await interaction.followup.send(f"{message}\nYour balance is now **{new_bal}**.")
 
 
 async def setup(bot):

@@ -16,8 +16,8 @@ class Help(commands.Cog):
     @app_commands.command(name="help", description="Get help on a command.")
     @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
     @db_check()
-    async def help(self, inter: Interaction):  # TODO: Use pages
-        await inter.response.defer()
+    async def help(self, interaction: Interaction):  # TODO: Use pages
+        await interaction.response.defer()
 
         embed = discord.Embed(
             title="Help",
@@ -66,7 +66,7 @@ class Help(commands.Cog):
                 )
             embeds.append(emb)
 
-        await inter.followup.send(embeds=embeds, ephemeral=True)
+        await interaction.followup.send(embeds=embeds, ephemeral=True)
 
 
 async def setup(bot: "Sassy"):

@@ -17,10 +17,11 @@ class Add(commands.Cog):
         self.user_db = self.bot.database["user"]
 
     @app_commands.command(name="add", description="Adds a user to the database.")
+    @app_commands.describe(user="The user to add to the database.")
     @is_admin()
-    async def add(self, inter: Interaction, user: discord.Member):
-        await inter.response.defer()
-        invoker = inter.user
+    async def add(self, interaction: Interaction, user: discord.Member):
+        await interaction.response.defer()
+        invoker = interaction.user
 
         if isinstance(invoker, User):
             return
@@ -34,7 +35,7 @@ class Add(commands.Cog):
 
             await log(
                 self.bot,
-                inter,
+                interaction,
                 LogType.DATABASE_ADD,
                 fields=[
                     Field("Moderator", f"{invoker.mention} (`{invoker.id}`)", False),
@@ -45,7 +46,7 @@ class Add(commands.Cog):
 
             message = "User added to the database!"
 
-        await inter.followup.send(message, ephemeral=True)
+        await interaction.followup.send(message, ephemeral=True)
 
 
 async def setup(bot: "Sassy"):

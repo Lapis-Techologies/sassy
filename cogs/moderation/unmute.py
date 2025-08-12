@@ -14,41 +14,44 @@ class UnMute(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
 
-    async def checks(self, inter: Interaction, user: discord.Member) -> bool:
-        admin = inter.guild.get_role(self.bot.config.get("guild", "roles", "admin"))
-        invoker = inter.user
+    async def checks(self, interaction: Interaction, user: discord.Member) -> bool:
+        admin = interaction.guild.get_role(self.bot.config.get("guild", "roles", "admin"))
+        invoker = interaction.user
 
         if isinstance(invoker, User):
             return False
         elif admin in user.roles:
-            await inter.followup.send("You cannot unmute an admin!", ephemeral=True)
+            await interaction.followup.send("You cannot unmute an admin!", ephemeral=True)
             return False
         elif user == invoker:
-            await inter.followup.send("You cannot unmute yourself!", ephemeral=True)
+            await interaction.followup.send("You cannot unmute yourself!", ephemeral=True)
             return False
         elif user.id == self.bot.user.id:
-            await inter.followup.send("hehe im not muted mate!", ephemeral=True)
+            await interaction.followup.send("hehe im not muted mate!", ephemeral=True)
             return False
         elif not user.is_timed_out():
-            await inter.followup.send("This user is not muted!")
+            await interaction.followup.send("This user is not muted!")
             return False
         else:
             return True
 
     @app_commands.command(name="unmute", description="Unmute a user.")
+    @app_commands.describe(
+        user="The user to unmute.",
+    )
     @db_check()
     @is_admin()
-    async def unmute(self, inter: Interaction, user: discord.Member):
-        await inter.response.defer()
+    async def unmute(self, interaction: Interaction, user: discord.Member):
+        await interaction.response.defer()
 
-        if not await self.checks(inter, user):
+        if not await self.checks(interaction, user):
             return
 
         await user.timeout(None)
 
-        await inter.followup.send(f"Unmuted {user}!")
+        await interaction.followup.send(f"Unmuted {user}!")
 
-        await log(self.bot, inter, LogType.UNMUTE)
+        await log(self.bot, interaction, LogType.UNMUTE)
 
 
 async def setup(bot):

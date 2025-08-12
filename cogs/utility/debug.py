@@ -27,8 +27,8 @@ class Debug(commands.Cog):
     @app_commands.command(
         name="debug", description="Gives some general information about the bots status"
     )
-    async def debug(self, inter: Interaction):
-        await inter.response.defer()
+    async def debug(self, interaction: Interaction):
+        await interaction.response.defer()
         if self.bot.user is None:
             return
         if self.bot.user.avatar is None:
@@ -66,7 +66,7 @@ class Debug(commands.Cog):
         embed.add_field(name="Commands", value=cmds)
         embed.set_thumbnail(url=pfp) if pfp is not None else None
 
-        await inter.followup.send(embeds=[embed, stats], ephemeral=True)
+        await interaction.followup.send(embeds=[embed, stats], ephemeral=True)
 
 
 async def setup(bot: "Sassy"):

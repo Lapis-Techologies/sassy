@@ -96,6 +96,10 @@ class Warnings(commands.Cog):
     @app_commands.command(
         name="warnings", description="View all warnings for a specific user."
     )
+    @app_commands.describe(
+        member="The member to get their warnings.",
+        case_id="Specific case id to get more information about a specifc warning.",
+    )
     @db_check()
     @is_admin()
     async def warnings(

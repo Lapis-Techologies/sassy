@@ -94,6 +94,10 @@ class Mutes(commands.Cog):
     @app_commands.command(
         name="mutes", description="View all mutes for a specific user."
     )
+    @app_commands.describe(
+        member="The member to get the mutes for.",
+        case_id="Specify a specific case_id to get information about it.",
+    )
     @db_check()
     @is_admin()
     async def mutes(

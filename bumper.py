@@ -5,7 +5,7 @@ from collections import namedtuple
 from argparse import ArgumentParser
 
 
-Version = namedtuple("Version", ["MAJOR", "MINOR", "PATCH"])
+Version = namedtuple("Version", ["MAJOR", "MINOR", "PATCH", "BUILD"])
 
 
 def update_markdown(version: str) -> None:
@@ -32,9 +32,10 @@ def load_version() -> Version:
         if Path("version.py").exists():
             raise ValueError("version.py is malformed!") from e
         else:
-            with open("version.py", "w") as file:
-                file.write("MAJOR = 0\nMINOR = 0\nPATCH = 0\n")
-            return Version(0, 0, 0)
+            version = Version(0, 0, 0, 0)
+            write(version)
+
+            return version
 
 
 def variable_check(version) -> Version:
@@ -43,31 +44,41 @@ def variable_check(version) -> Version:
         getattr(version, "MAJOR", 0),
         getattr(version, "MINOR", 0),
         getattr(version, "PATCH", 0),
+        getattr(version, "BUILD", 0)
     )
 
 
-def update_version(changes: tuple[int, int, int], version: Version) -> Version:
+def update_version(changes: tuple[int, int, int, int], version: Version) \
+        -> (
+        Version):
     """
     Update version based on changes (increment/decrement for major, minor, patch).
     Returns new Version tuple, ensuring non-negative values.
     """
-    major_change, minor_change, patch_change = changes
-    new_major, new_minor, new_patch = version.MAJOR, version.MINOR, version.PATCH
+    major_change, minor_change, patch_change, build_change = changes
+    major, minor, patch, build = (version.MAJOR, version.MINOR, version.PATCH,
+                                  version.BUILD)
 
     if major_change != 0:
-        new_major += major_change
-        new_minor, new_patch = 0, 0
+        major += major_change
+        minor = 0
+        patch = 0
+        build = 0
     elif minor_change != 0:
-        new_minor += minor_change
-        new_patch = 0
+        minor += minor_change
+        patch = 0
+        build = 0
     elif patch_change != 0:
-        new_patch += patch_change
+        patch += patch_change
+        build = 0
+    elif build_change != 0:
+        build += 1
 
     # Validate non-negative version numbers
-    if new_major < 0 or new_minor < 0 or new_patch < 0:
+    if major < 0 or minor < 0 or patch < 0 or build < 0:
         raise ValueError("Version numbers cannot be negative!")
 
-    return Version(new_major, new_minor, new_patch)
+    return Version(major, minor, patch, build)
 
 
 def write(version: Version) -> None:
@@ -78,6 +89,7 @@ def write(version: Version) -> None:
     script.write(f"MAJOR = {version.MAJOR}\n")
     script.write(f"MINOR = {version.MINOR}\n")
     script.write(f"PATCH = {version.PATCH}\n")
+    script.write(f"BUILD = {version.BUILD}\n")
 
     with open("version.py", "w") as file:
         script.seek(0)
@@ -94,6 +106,9 @@ def main() -> None:
     )
     parser.add_argument(
         "-p", "--patch", action="store_true", help="Increment patch version"
+    )
+    parser.add_argument(
+        "-b", "--build", action="store_true", help="Increment build version"
     )
     parser.add_argument(
         "-dM", "--decrement-major", action="store_true", help="Decrement major version"
@@ -119,12 +134,14 @@ def main() -> None:
             args.major,
             args.minor,
             args.patch,
+            args.build,
             args.decrement_major,
             args.decrement_minor,
             args.decrement_patch,
         ]
     ):
-        print(f"{version.MAJOR}.{version.MINOR}.{version.PATCH}")
+        print(f"{version.MAJOR}.{version.MINOR}.{version.PATCH}"
+              f"  (BUILD {version.BUILD})")
         return
 
     # Validate that only one type of update is specified
@@ -135,6 +152,7 @@ def main() -> None:
         (args.decrement_minor, "minor decrement"),
         (args.patch, "patch increment"),
         (args.decrement_patch, "patch decrement"),
+        (args.build, "build increment")
     ]
     active_updates = [update for update, _ in updates if update]
     if len(active_updates) > 1:
@@ -142,7 +160,8 @@ def main() -> None:
             "Only one version update (increment or decrement) can be specified at a time."
         )
     elif len(active_updates) == 0:
-        print(f"Sassy Bot Version {version.MAJOR}.{version.MINOR}.{version.PATCH}")
+        print(f"Sassy Bot Version {version.MAJOR}.{version.MINOR}.{version.PATCH}"
+              f"  (BUILD {version.BUILD})")
         return
 
     # Determine changes
@@ -150,6 +169,7 @@ def main() -> None:
         1 if args.major else -1 if args.decrement_major else 0,
         1 if args.minor else -1 if args.decrement_minor else 0,
         1 if args.patch else -1 if args.decrement_patch else 0,
+        1 if args.build else 0
     )
 
     # Update version
