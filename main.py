@@ -10,7 +10,9 @@ from discord.ext import commands
 from pymongo import AsyncMongoClient
 from config import botconfig
 from repl import REPL
-from utils.tasks.poll_watcher import watch_polls
+from utils.watcher.watcher import Watcher
+from utils.watcher.poll import callback as poll_callback
+from utils.watcher.giveaway import callback as giveaway_callback
 
 
 class Sassy(commands.Bot):
@@ -36,6 +38,8 @@ class Sassy(commands.Bot):
         self.repl = REPL(self)
         self.remove_command("help")
         self._booted = False
+        self.poll_watcher = Watcher(self, "polls", poll_callback)
+        self.giveaway_watcher = Watcher(self, "giveaways", giveaway_callback)
 
     def reload_config(self) -> None:
         self.config.set_config("config.json")
@@ -50,13 +54,16 @@ class Sassy(commands.Bot):
             return
         self._booted = True
 
-        tasks = [{"poll": watch_polls}]
+        tasks = [
+            {"poll": self.poll_watcher.watch_all_events},
+            {"giveaway": self.giveaway_watcher.watch_all_events},
+        ]
 
         print(f"Running {len(tasks)} Task(s)")
         for task in tasks:
             for task_name, task_function in task.items():
                 print(f"  > Running {task_name}")
-                await task_function(self)
+                await task_function()
 
         await self.load_cogs()
         self.guild = self.get_guild(int(self.config.get("guild", "id")))

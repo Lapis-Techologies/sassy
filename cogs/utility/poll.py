@@ -3,7 +3,7 @@ from uuid import uuid4
 from discord import app_commands, Interaction, Embed
 from discord.ext import commands
 from utils.checks import db_check
-from utils.tasks.poll_watcher import _watch_poll
+from utils.watcher.watcher import Watcher
 
 
 if TYPE_CHECKING:
@@ -31,7 +31,6 @@ class Poll(commands.Cog):
     @db_check()
     async def poll(self, interaction: Interaction, minutes: int, question: str, answers: str):
         await interaction.response.defer()
-        poll_id = str(uuid4())
         try:
             question_clean = self._block_mentions(self._clean_question(question))
             answer_list = self._clean_answers(answers)
@@ -39,16 +38,16 @@ class Poll(commands.Cog):
             await interaction.followup.send(f"❌ {str(e)}", ephemeral=True)
             return
 
-        seconds = minutes * 60
-        if seconds > 604800:  # 1 Week
-            await interaction.followup.send("Sorry m8, Polls can only last up to 1 week.")
+        if minutes > 20160:  # 2 Week
+            await interaction.followup.send("Sorry m8, Polls can only last up to 2 week.")
             return
+
+        seconds = minutes * 60
 
         end_date = interaction.created_at.timestamp() + seconds
 
-        await self.polling_db.insert_one(
+        poll_document = await self.polling_db.insert_one(
             {
-                "id": poll_id,
                 "uid": interaction.user.id,
                 "channel": interaction.channel_id,
                 "question": question_clean,
@@ -63,7 +62,7 @@ class Poll(commands.Cog):
         embed = Embed(
             title="Brand New Poll", description=f"**{question_clean}**", color=0x3399FF
         )
-        embed.set_footer(text=f"Poll ID | {poll_id}")
+        embed.set_footer(text=f"Poll ID | {poll_document.inserted_id}")
 
         for i, option in enumerate(answer_list):
             embed.add_field(name=f"Option {i + 1}", value=option)
@@ -81,7 +80,7 @@ class Poll(commands.Cog):
         for i, _ in enumerate(answer_list):
             await message.add_reaction(self.emojis[i])
 
-        await _watch_poll(self.bot, poll_id)
+        self.bot.poll_watcher.watch_event(poll_document)
 
     def _clean_answers(self, raw: str) -> list[str]:
         split_answers = [a.strip() for a in raw.split(",")]

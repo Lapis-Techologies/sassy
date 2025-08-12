@@ -1,5 +1,4 @@
 import discord
-from re import compile
 from time import time
 from typing import TYPE_CHECKING
 from discord.ext import commands
@@ -17,9 +16,6 @@ if TYPE_CHECKING:
 class ReactionPoll(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
-        self.uuid4_regex = compile(
-            r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
-        )
         self.polling_db = self.bot.database["polls"]
 
     async def handle_poll_reaction(
@@ -30,12 +26,9 @@ class ReactionPoll(commands.Cog):
         parts = footer.split(" | ")
         if len(parts) != 2:
             return
-        uuid = parts[1].strip()
+        poll_id = parts[1].strip()
 
-        if not self.uuid4_regex.match(uuid):
-            return
-
-        poll = await self.polling_db.find_one({"id": uuid})
+        poll = await self.polling_db.find_one({"_id": poll_id})
         if poll is None:
             return
 
@@ -60,11 +53,11 @@ class ReactionPoll(commands.Cog):
 
         if payload.event_type == "REACTION_REMOVE":
             await self.polling_db.update_one(
-                {"id": uuid}, {"$inc": {f"votes.{selected_option}": -1}}
+                {"_id": poll_id}, {"$inc": {f"votes.{selected_option}": -1}}
             )
         else:
             await self.polling_db.update_one(
-                {"id": uuid}, {"$inc": {f"votes.{selected_option}": 1}}
+                {"_id": poll_id}, {"$inc": {f"votes.{selected_option}": 1}}
             )
 
     async def handle_reaction_event(self, payload: RawReactionActionEvent) -> None:
