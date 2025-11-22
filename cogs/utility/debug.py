@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from discord import app_commands, Interaction, Embed
 from discord.ext import commands
-from _stats import ProjectReader
+from utils.project_reader import ProjectReader
 
 
 if TYPE_CHECKING:
@@ -13,10 +13,9 @@ class Debug(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
         self.whitelist = [
-            Path("bumper.py"),
             Path("main.py"),
-            Path("repl.py"),
             Path("utils/"),
+            Path("schedules/"),
             Path("resources/"),
             Path("config/"),
             Path("cogs/"),

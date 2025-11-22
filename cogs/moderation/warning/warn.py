@@ -19,7 +19,9 @@ class Warn(commands.Cog):
         self.user_db = self.bot.database["user"]
 
     async def checks(self, interaction, user) -> bool:
-        admin = interaction.guild.get_role(self.bot.config.get("guild", "roles", "admin"))
+        admin = interaction.guild.get_role(
+            self.bot.config.get("guild", "roles", "admin")
+        )
         invoker = interaction.user
 
         if isinstance(invoker, User):
@@ -31,7 +33,9 @@ class Warn(commands.Cog):
             await interaction.followup.send("You cannot warn yourself!", ephemeral=True)
             return False
         elif user.id == self.bot.user.id:
-            await interaction.followup.send("hehe you can't warn me mate!", ephemeral=True)
+            await interaction.followup.send(
+                "hehe you can't warn me mate!", ephemeral=True
+            )
             return False
         return True
 
@@ -97,7 +101,9 @@ class Warn(commands.Cog):
         case_id = str(uuid4())
 
         await self.add_warning(interaction, user, invoker, case_id, reason)
-        await interaction.followup.send(f"{user.mention} has been warned!", ephemeral=True)
+        await interaction.followup.send(
+            f"{user.mention} has been warned!", ephemeral=True
+        )
 
 
 async def setup(bot: "Sassy"):

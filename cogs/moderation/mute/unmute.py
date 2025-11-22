@@ -15,16 +15,22 @@ class UnMute(commands.Cog):
         self.bot = bot
 
     async def checks(self, interaction: Interaction, user: discord.Member) -> bool:
-        admin = interaction.guild.get_role(self.bot.config.get("guild", "roles", "admin"))
+        admin = interaction.guild.get_role(
+            self.bot.config.get("guild", "roles", "admin")
+        )
         invoker = interaction.user
 
         if isinstance(invoker, User):
             return False
         elif admin in user.roles:
-            await interaction.followup.send("You cannot unmute an admin!", ephemeral=True)
+            await interaction.followup.send(
+                "You cannot unmute an admin!", ephemeral=True
+            )
             return False
         elif user == invoker:
-            await interaction.followup.send("You cannot unmute yourself!", ephemeral=True)
+            await interaction.followup.send(
+                "You cannot unmute yourself!", ephemeral=True
+            )
             return False
         elif user.id == self.bot.user.id:
             await interaction.followup.send("hehe im not muted mate!", ephemeral=True)

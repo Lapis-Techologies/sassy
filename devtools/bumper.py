@@ -1,23 +1,24 @@
-from importlib import import_module
+import os
+import importlib.util
 from io import StringIO
 from pathlib import Path
 from collections import namedtuple
 from argparse import ArgumentParser
 
 
-Version = namedtuple("Version", ["MAJOR", "MINOR", "PATCH", "BUILD"])
+Version = namedtuple("Version", ["MAJOR", "MINOR", "PATCH"])
 
 
 def update_markdown(version: str) -> None:
     """Update the version badge in README.md."""
-    with open("README.md", "r") as readme:
+    with open("../README.md", "r") as readme:
         lines = readme.readlines()
 
     new_line = f'    <img alt="Version" src="https://img.shields.io/badge/Version-{version}-green">\n'
     for i, line in enumerate(lines):
         if '<img alt="Version' in line:
             lines[i] = new_line
-            with open("README.md", "w") as readme:
+            with open("../README.md", "w") as readme:
                 readme.writelines(lines)
             return
     print("[-] Couldn't find version tag inside readme file!")
@@ -25,16 +26,22 @@ def update_markdown(version: str) -> None:
 
 def load_version() -> Version:
     """Load the version file or create a default if it doesn't exist."""
+
+    version_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "version.py"
+    )
+
     try:
-        module = import_module("version")
-        return variable_check(module)
-    except ImportError as e:
-        if Path("version.py").exists():
+        spec = importlib.util.spec_from_file_location("version", version_path)
+        version_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(version_module)
+        return variable_check(version_module)
+    except (FileNotFoundError, AttributeError) as e:
+        if Path("../version.py").exists():
             raise ValueError("version.py is malformed!") from e
         else:
             version = Version(0, 0, 0, 0)
             write(version)
-
             return version
 
 
@@ -44,41 +51,38 @@ def variable_check(version) -> Version:
         getattr(version, "MAJOR", 0),
         getattr(version, "MINOR", 0),
         getattr(version, "PATCH", 0),
-        getattr(version, "BUILD", 0)
     )
 
 
-def update_version(changes: tuple[int, int, int, int], version: Version) \
-        -> (
-        Version):
+def update_version(
+    changes: tuple[int, int, int], version: Version
+) -> Version:
     """
     Update version based on changes (increment/decrement for major, minor, patch).
     Returns new Version tuple, ensuring non-negative values.
     """
-    major_change, minor_change, patch_change, build_change = changes
-    major, minor, patch, build = (version.MAJOR, version.MINOR, version.PATCH,
-                                  version.BUILD)
+    major_change, minor_change, patch_change = changes
+    major, minor, patch = (
+        version.MAJOR,
+        version.MINOR,
+        version.PATCH,
+    )
 
     if major_change != 0:
         major += major_change
         minor = 0
         patch = 0
-        build = 0
     elif minor_change != 0:
         minor += minor_change
         patch = 0
-        build = 0
     elif patch_change != 0:
         patch += patch_change
-        build = 0
-    elif build_change != 0:
-        build += 1
 
     # Validate non-negative version numbers
-    if major < 0 or minor < 0 or patch < 0 or build < 0:
+    if major < 0 or minor < 0 or patch < 0:
         raise ValueError("Version numbers cannot be negative!")
 
-    return Version(major, minor, patch, build)
+    return Version(major, minor, patch)
 
 
 def write(version: Version) -> None:
@@ -89,9 +93,8 @@ def write(version: Version) -> None:
     script.write(f"MAJOR = {version.MAJOR}\n")
     script.write(f"MINOR = {version.MINOR}\n")
     script.write(f"PATCH = {version.PATCH}\n")
-    script.write(f"BUILD = {version.BUILD}\n")
 
-    with open("version.py", "w") as file:
+    with open("../version.py", "w") as file:
         script.seek(0)
         file.write(script.read())
 
@@ -106,9 +109,6 @@ def main() -> None:
     )
     parser.add_argument(
         "-p", "--patch", action="store_true", help="Increment patch version"
-    )
-    parser.add_argument(
-        "-b", "--build", action="store_true", help="Increment build version"
     )
     parser.add_argument(
         "-dM", "--decrement-major", action="store_true", help="Decrement major version"
@@ -134,17 +134,17 @@ def main() -> None:
             args.major,
             args.minor,
             args.patch,
-            args.build,
             args.decrement_major,
             args.decrement_minor,
             args.decrement_patch,
         ]
     ):
-        print(f"{version.MAJOR}.{version.MINOR}.{version.PATCH}"
-              f"  (BUILD {version.BUILD})")
+        print(
+            f"{version.MAJOR}.{version.MINOR}.{version.PATCH}"
+        )
         return
 
-    # Validate that only one type of update is specified
+
     updates = [
         (args.major, "major increment"),
         (args.decrement_major, "major decrement"),
@@ -152,7 +152,6 @@ def main() -> None:
         (args.decrement_minor, "minor decrement"),
         (args.patch, "patch increment"),
         (args.decrement_patch, "patch decrement"),
-        (args.build, "build increment")
     ]
     active_updates = [update for update, _ in updates if update]
     if len(active_updates) > 1:
@@ -160,8 +159,9 @@ def main() -> None:
             "Only one version update (increment or decrement) can be specified at a time."
         )
     elif len(active_updates) == 0:
-        print(f"Sassy Bot Version {version.MAJOR}.{version.MINOR}.{version.PATCH}"
-              f"  (BUILD {version.BUILD})")
+        print(
+            f"Sassy Bot Version {version.MAJOR}.{version.MINOR}.{version.PATCH}"
+        )
         return
 
     # Determine changes
@@ -169,7 +169,6 @@ def main() -> None:
         1 if args.major else -1 if args.decrement_major else 0,
         1 if args.minor else -1 if args.decrement_minor else 0,
         1 if args.patch else -1 if args.decrement_patch else 0,
-        1 if args.build else 0
     )
 
     # Update version

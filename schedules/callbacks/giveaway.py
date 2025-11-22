@@ -25,9 +25,7 @@ async def callback(bot: "Sassy", giveaway: dict):
 
     message_text = [f"{user.mention} Your giveaway is over!"]
     for winner in chosen_winners:
-        message_text.append(f"{winner.mention} You have been selected as a "
-                       f"winner!")
+        message_text.append(f"{winner.mention} You have been selected as a winner!")
 
-    message = await channel.send("\n".join(message_text),
-                                 embed=embed)
+    message = await channel.send("\n".join(message_text), embed=embed)
     await message.add_reaction("🎉")

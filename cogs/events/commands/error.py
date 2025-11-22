@@ -4,10 +4,7 @@ import discord
 from time import time
 from typing import TYPE_CHECKING
 from discord.ext import commands
-from discord import (
-    app_commands,
-    Interaction
-)
+from discord import app_commands, Interaction
 from utils.dpaste import upload
 from utils.log import log, Importancy, LogType, Field
 
@@ -87,7 +84,9 @@ class Error(commands.Cog):
     async def error_out(self, interaction, error) -> None:
         # TODO: Refactor actual logging into own function, allow for
         #  customizing button.
-        file_name, line, command, params, tb = await self.handle_error(interaction, error)
+        file_name, line, command, params, tb = await self.handle_error(
+            interaction, error
+        )
 
         if command == "fail":
             goto_url = discord.ui.Button(
@@ -117,9 +116,11 @@ class Error(commands.Cog):
 
         url = await upload(tb)
 
-        message = (f"I'm sorry mate, the choomahs are coming back,"
-                   f" I can't do that right now. I've noted it down and will"
-                   f" look into it. (Ran into error {type(error).__name__})")
+        message = (
+            f"I'm sorry mate, the choomahs are coming back,"
+            f" I can't do that right now. I've noted it down and will"
+            f" look into it. (Ran into error {type(error).__name__})"
+        )
 
         goto_url = discord.ui.Button(
             label="Traceback", style=discord.ButtonStyle.link, url=url

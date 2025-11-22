@@ -24,9 +24,7 @@ async def callback(bot: "Sassy", poll: dict):
 
     embed = Embed(title="Finished Poll", color=0x3399FF)
     embed.add_field(name="Question", value=f"**{question}**")
-    embed.add_field(
-        name="Winner", value=f"The winner is option **{biggest[0] + 1}**!"
-    )
+    embed.add_field(name="Winner", value=f"The winner is option **{biggest[0] + 1}**!")
 
     for i, option in enumerate(options):
         if i == biggest[0]:

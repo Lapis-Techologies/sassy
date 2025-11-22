@@ -55,7 +55,9 @@ class Hunt(commands.Cog):
         else:
             message = f"\\*You go to Choomah Island* You Lost __**{abs(diff)}**__ Choomah Coins."
 
-        await interaction.followup.send(f"{message}\nYour balance is now **{new_bal}**.")
+        await interaction.followup.send(
+            f"{message}\nYour balance is now **{new_bal}**."
+        )
 
 
 async def setup(bot):

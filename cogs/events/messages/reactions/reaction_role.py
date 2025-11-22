@@ -4,7 +4,6 @@ from discord.ext import commands
 from discord import RawReactionActionEvent
 
 
-
 if TYPE_CHECKING:
     from main import Sassy
 

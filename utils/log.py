@@ -27,6 +27,7 @@ class LogType(StrEnum):
     DATABASE_ADD = "database add"
     MESSAGE_EDIT = "message edit"
     MESSAGE_DELETE = "message delete"
+    PURGE = "mass message delete"
 
 
 @dataclass()
@@ -72,6 +73,7 @@ async def log(
         LogType.UNMUTE,
         LogType.WARN,
         LogType.REMOVE_WARN,
+        LogType.PURGE,
     )
 
     colors = {

@@ -25,9 +25,9 @@ class Giveaway(commands.Cog):
     )
     @app_commands.checks.cooldown(1, 300, key=lambda i: (i.guild_id, i.user.id))
     @db_check()
-    async def giveaway(self, interaction: Interaction, time: int, prize: str,
-                       winners:
-    int = 1):
+    async def giveaway(
+        self, interaction: Interaction, time: int, prize: str, winners: int = 1
+    ):
         await interaction.response.defer()
         if winners <= 0:
             await interaction.followup.send(
@@ -42,10 +42,10 @@ class Giveaway(commands.Cog):
 
         prize = self._block_mentions(self._clean_prize(prize))
 
-        if time > 20160: # 2 weeks
-            await interaction.followup.send("Sorry m8, Giveaways can only last "
-                                            "up to "
-                                            "2 week.")
+        if time > 20160:  # 2 weeks
+            await interaction.followup.send(
+                "Sorry m8, Giveaways can only last up to 2 week."
+            )
             return
 
         seconds = time * 60
@@ -53,18 +53,12 @@ class Giveaway(commands.Cog):
         end_date = interaction.created_at.timestamp() + seconds
 
         embed = Embed(
-            title="Giveaway 🎊", description=f"{interaction.user.mention} has "
-                                            f"created a new giveaway!",
-            color=0x3399FF
+            title="Giveaway 🎊",
+            description=f"{interaction.user.mention} has created a new giveaway!",
+            color=0x3399FF,
         )
-        embed.add_field(
-            name="Prize",
-            value=f"**{prize}**"
-        )
-        embed.add_field(
-            name="Winners",
-            value=f"**{winners}**"
-        )
+        embed.add_field(name="Prize", value=f"**{prize}**")
+        embed.add_field(name="Winners", value=f"**{winners}**")
 
         message = await interaction.followup.send(
             f"This giveaway ends <t:{int(end_date)}:R>", embed=embed, wait=True
@@ -89,9 +83,7 @@ class Giveaway(commands.Cog):
     def _clean_prize(self, prize: str) -> str:
         prize = prize.strip()
         if len(prize) > self.MAX_PRIZE_LEN:
-            raise ValueError(
-                f"Prize must be under {self.MAX_PRIZE_LEN} characters."
-            )
+            raise ValueError(f"Prize must be under {self.MAX_PRIZE_LEN} characters.")
         if "$" in prize or "." in prize:
             raise ValueError(
                 "Question cannot contain '$' or '.' (MongoDB restriction)."

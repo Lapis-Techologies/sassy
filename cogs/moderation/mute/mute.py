@@ -63,7 +63,9 @@ class Mute(commands.Cog):
         hours: int,
         minutes: int,
     ) -> bool:
-        admin = interaction.guild.get_role(self.bot.config.get("guild", "roles", "admin"))
+        admin = interaction.guild.get_role(
+            self.bot.config.get("guild", "roles", "admin")
+        )
         invoker = interaction.user
         # Discord strangely forces max timeout time to be 28 days ?
         total_time_seconds = (days * 86400) + (hours * 3600) + (minutes * 60)
@@ -76,10 +78,14 @@ class Mute(commands.Cog):
             await interaction.followup.send("You cannot mute yourself!", ephemeral=True)
             return False
         elif user.id == self.bot.user.id:
-            await interaction.followup.send("hehe you can't mute me mate!", ephemeral=True)
+            await interaction.followup.send(
+                "hehe you can't mute me mate!", ephemeral=True
+            )
             return False
         elif user.is_timed_out():
-            await interaction.followup.send("This user is already muted!", ephemeral=True)
+            await interaction.followup.send(
+                "This user is already muted!", ephemeral=True
+            )
             return False
         elif days == 0 and hours == 0 and minutes == 0:
             await interaction.followup.send(

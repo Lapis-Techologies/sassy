@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from main import Sassy
 
 
-class Messages(commands.Cog):
+class MessageChange(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
 
@@ -75,4 +75,4 @@ class Messages(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(Messages(bot))
+    await bot.add_cog(MessageChange(bot))

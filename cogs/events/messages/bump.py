@@ -3,7 +3,7 @@ from io import BytesIO
 from time import time
 from asyncio import sleep
 from discord.ext import commands
-from discord import Message, File, Embed, TextChannel
+from discord import Message, File, Embed
 from cogs.xp.IGNORE_score import calculate_score
 
 
@@ -21,9 +21,13 @@ class Bump(commands.Cog):
         self.choomah_coin_multiplier = float(
             self.bot.config.get("xp", "multipliers", "choomah_coins")
         )
-        self.bumps_multiplier = float(self.bot.config.get("xp", "multipliers", "bumps"))
 
+        self.bumps_multiplier = float(self.bot.config.get("xp", "multipliers", "bumps"))
         self.bump_bot_id = int(self.bot.config.get("guild", "channels", "bump", "bot"))
+
+        self.bumping_achievements: dict[dict[str, int | str]] = self.bot.config.get(
+            "events", "bumping", "achievement"
+        )
 
     @commands.Cog.listener()
     async def on_message(self, message: Message) -> None:
@@ -40,14 +44,67 @@ class Bump(commands.Cog):
             )
 
             bump_time = await self._store_next_bump_time()
-
+            await self._bump_achievement(message)
             await self._send_thank_you(message, bump_time)
 
-            self.bot.loop.create_task(self._bump_task(message.channel, message))
+            self.bot.loop.create_task(self._bump_task(message))
         except Exception as e:
             print(f"[handle_bump] ERROR: {e}")
 
-    async def _bump_task(self, channel: TextChannel, message: Message) -> None:
+    async def _bump_achievement(self, message: Message) -> None:
+        bumper = await self.user_db.find_one(
+            {"uid": message.interaction_metadata.user.id},
+            {"bumps": 1, "achievements": 1},
+        )
+        bumps = bumper["bumps"]
+        bumper_achievements = bumper.get("achievements", [])
+        new_achievements = []
+
+        sorted_achievements = sorted(
+            self.bumping_achievements.items(), key=lambda x: x[1]["amount"]
+        )
+
+        for achievement_name, achievement_data in sorted_achievements:
+            achievement_amount = achievement_data["amount"]
+
+            if bumps < achievement_amount:
+                break
+            elif achievement_name in bumper_achievements:
+                continue
+
+            new_achievements.append((achievement_name, achievement_data))
+
+        if not new_achievements:
+            return
+        await self.user_db.update_one(
+            {"uid": message.interaction_metadata.user.id},
+            {
+                "$push": {
+                    "achievements": {
+                        "$each": [achievement[0] for achievement in new_achievements]
+                    }
+                }
+            },
+        )
+        embeds = []
+        files = []
+        for new_achievement in new_achievements:
+            name = new_achievement[0]
+            data = new_achievement[1]
+            with open(f"resources/achievement/bump/{name}.png", "rb") as f:
+                files.append(File(f, filename=f"{name}.png"))
+            ach_emb = Embed(
+                title=name.title(),
+                description=f"You earned new achievements, Mate that thing is like a 1 way ticket to the Astral planes, but it feels like you got 2. Nice you bumped the hangout **{data['amount']}** times!",
+            )
+            ach_emb.set_image(url=data["source"])
+            embeds.append(ach_emb)
+
+        await message.channel.send(
+            message.interaction_metadata.user.mention, embeds=embeds
+        )
+
+    async def _bump_task(self, message: Message) -> None:
         try:
             bump_info = await self.meta.find_one({"id": "bump_tracker"})
             bump_time = float(bump_info["bump_time"])
@@ -56,7 +113,7 @@ class Bump(commands.Cog):
             if time_left > 0:
                 await sleep(time_left)
 
-            await channel.send(
+            await message.channel.send(
                 f"{message.interaction_metadata.user.mention} Time to bump you fucken druggah",
                 files=[self._get_gif()],
             )
@@ -118,10 +175,14 @@ class Bump(commands.Cog):
         await message.channel.send(
             f"I will remind you to bump again {message.interaction_metadata.user.mention} at {timestamp_one} ({timestamp_relative}).",
             embed=embed,
-            files=[self._get_gif()],
+            files=[self._get_gif(True)],
         )
 
-    def _get_gif(self) -> File:
+    def _get_gif(self, yis: bool = False) -> File:
+        if yis:
+            with open("resources/oh-yis.gif", "rb") as f:
+                return File(fp=BytesIO(f.read()), filename="oh-yis.gif")
+
         with open("./resources/you-fucken-druggah.gif", "rb") as f:
             return File(fp=BytesIO(f.read()), filename="you-fucken-druggah.gif")
 

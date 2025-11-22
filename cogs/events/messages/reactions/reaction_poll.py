@@ -2,16 +2,13 @@ import discord
 from time import time
 from typing import TYPE_CHECKING
 from discord.ext import commands
-from discord import (
-    RawReactionActionEvent,
-    Message
-)
+from discord import RawReactionActionEvent, Message
+from bson.objectid import ObjectId
 
 
 if TYPE_CHECKING:
     from main import Sassy
-# TODO: Refactor reaction_poll and reaction_role into one reaction handler,
-#  create a command for creating reaction messages.
+
 
 class ReactionPoll(commands.Cog):
     def __init__(self, bot: "Sassy"):
@@ -26,8 +23,7 @@ class ReactionPoll(commands.Cog):
         parts = footer.split(" | ")
         if len(parts) != 2:
             return
-        poll_id = parts[1].strip()
-
+        poll_id = ObjectId(parts[1].strip())
         poll = await self.polling_db.find_one({"_id": poll_id})
         if poll is None:
             return
@@ -39,7 +35,6 @@ class ReactionPoll(commands.Cog):
             return
 
         emoji_id = payload.emoji.id
-
         emojis = {
             int(emoji_id): idx
             for idx, (_, emoji_id) in enumerate(
@@ -47,7 +42,6 @@ class ReactionPoll(commands.Cog):
             )
         }
         selected_option = emojis.get(emoji_id)
-
         if selected_option is None or selected_option >= len(poll["votes"]):
             return
 

@@ -1,9 +1,7 @@
 from typing import TYPE_CHECKING
-from uuid import uuid4
 from discord import app_commands, Interaction, Embed
 from discord.ext import commands
 from utils.checks import db_check
-from utils.watcher.watcher import Watcher
 
 
 if TYPE_CHECKING:
@@ -29,7 +27,9 @@ class Poll(commands.Cog):
         1, 300, key=lambda i: (i.guild_id, i.user.id)
     )  # 1/5min
     @db_check()
-    async def poll(self, interaction: Interaction, minutes: int, question: str, answers: str):
+    async def poll(
+        self, interaction: Interaction, minutes: int, question: str, answers: str
+    ):
         await interaction.response.defer()
         try:
             question_clean = self._block_mentions(self._clean_question(question))
@@ -39,7 +39,9 @@ class Poll(commands.Cog):
             return
 
         if minutes > 20160:  # 2 Week
-            await interaction.followup.send("Sorry m8, Polls can only last up to 2 week.")
+            await interaction.followup.send(
+                "Sorry m8, Polls can only last up to 2 week."
+            )
             return
 
         seconds = minutes * 60
