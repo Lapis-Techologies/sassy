@@ -55,7 +55,14 @@ class BotConfig(ConfigHandler):
                     },
                 },
             },
-            "xp": {"rewards": (SchemaValidator.is_numeric_str, SchemaValidator.is_int)},
+            "xp": {
+                "rewards": (SchemaValidator.is_numeric_str, SchemaValidator.is_int),
+                "multipliers": {
+                    "level": SchemaValidator.is_number,
+                    "choomah_coins": SchemaValidator.is_number,
+                    "bumps": SchemaValidator.is_number,
+                },
+            },
             "commands": {
                 "poll": {
                     "1": SchemaValidator.is_int,

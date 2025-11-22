@@ -17,7 +17,7 @@ class Kick(commands.Cog):
         self.bot = bot
         self.user_db = self.bot.database["user"]
 
-    async def add_kick(self, inter, invoker, user, reason) -> None:
+    async def add_kick(self, interaction, invoker, user, reason) -> None:
         case_id = str(uuid4())
         await self.user_db.update_one(
             {"uid": user.id},
@@ -36,7 +36,7 @@ class Kick(commands.Cog):
 
         await log(
             self.bot,
-            inter,
+            interaction,
             LogType.KICK,
             reason,
             [Field("Case ID", f"`{case_id}`", False)],
@@ -58,27 +58,31 @@ class Kick(commands.Cog):
         return True
 
     @app_commands.command(name="kick", description="Kick a user from the server.")
+    @app_commands.describe(
+        user="The user to kick.",
+        reason='The reason for the kick. Defaults to "No reason provided."',
+    )
     @db_check()
     @is_admin()
     async def kick(
         self,
-        inter: Interaction,
+        interaction: Interaction,
         user: discord.Member,
         reason: str = "No reason provided.",
     ):
-        await inter.response.defer()
-        invoker = inter.user
+        await interaction.response.defer()
+        invoker = interaction.user
 
-        if not await self.check(inter, invoker, user):
+        if not await self.check(interaction, invoker, user):
             return
         elif isinstance(invoker, User):
             return
 
         await user.kick(reason=reason)
-        await inter.followup.send(
+        await interaction.followup.send(
             f"hehe, got em. (kicked {user.mention})", ephemeral=True
         )
-        await self.add_kick(inter, invoker, user, reason)
+        await self.add_kick(interaction, invoker, user, reason)
 
 
 async def setup(bot: "Sassy"):

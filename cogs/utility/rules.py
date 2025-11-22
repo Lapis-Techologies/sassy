@@ -16,7 +16,7 @@ class Rules(commands.Cog):
     @app_commands.command(name="rules", description="Post the rules")
     @app_commands.checks.cooldown(1, 40, key=lambda i: (i.guild_id, i.user.id))
     @db_check()
-    async def ping(self, inter: Interaction):
+    async def ping(self, interaction: Interaction):
         with open("./resources/rules.json", "r") as f:
             rules: list[dict[str, str]] = load(f)
 
@@ -30,7 +30,7 @@ class Rules(commands.Cog):
             details = entry[rule]
             embed.add_field(name=f"{i + 1}. {rule}", value=details, inline=False)
 
-        await inter.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot: "Sassy"):

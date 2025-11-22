@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from main import Sassy
 
 
-class Warnings(commands.Cog):
+class Mutes(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
         self.user_db = self.bot.database["user"]
@@ -22,14 +22,14 @@ class Warnings(commands.Cog):
         )
         if curs is None:
             embed = discord.Embed(
-                title="No Warnings Found",
-                description=f"{member.mention} does not have any warnings on record!",
+                title="No Mutes Found",
+                description=f"{member.mention} does not have any mutes on record!",
                 color=0x00FF00,
             )
             await interaction.followup.send(embed=embed)
             return
 
-        embed = discord.Embed(title=f"Warning Case for {member.name}")
+        embed = discord.Embed(title=f"Mute Case for {member.name}")
 
         reason = curs["reason"]
         moderator = self.bot.get_user(curs["moderator"])
@@ -46,7 +46,7 @@ class Warnings(commands.Cog):
         await interaction.followup.send(embed=embed)
         return
 
-    async def find_warnings(self, member, interaction) -> None:
+    async def find_mutes(self, member, interaction) -> None:
         pipeline = [
             {"$match": {"uid": member.id}},
             {
@@ -55,7 +55,7 @@ class Warnings(commands.Cog):
                         "$filter": {
                             "input": "$logs",
                             "as": "log",
-                            "cond": {"$eq": ["$$log.action", LogType.WARN.value]},
+                            "cond": {"$eq": ["$$log.action", LogType.MUTE.value]},
                         }
                     }
                 }
@@ -67,16 +67,14 @@ class Warnings(commands.Cog):
 
         if not cases:
             embed = discord.Embed(
-                title="No Warnings Found",
-                description=f"{member.mention} does not have any warnings on record!",
+                title="No Mutes Found",
+                description=f"{member.mention} does not have any mutes on record!",
                 color=0x00FF00,
             )
             await interaction.followup.send(embed=embed)
             return
 
-        embed = discord.Embed(
-            title=f"Warnings for {member} ({member.id})", color=0xFF0000
-        )
+        embed = discord.Embed(title=f"Mutes for {member} ({member.id})", color=0xFF0000)
         count = 0
 
         for log in cases:
@@ -94,11 +92,15 @@ class Warnings(commands.Cog):
         await interaction.followup.send(embed=embed)
 
     @app_commands.command(
-        name="warnings", description="View all warnings for a specific user."
+        name="mutes", description="View all mutes for a specific user."
+    )
+    @app_commands.describe(
+        member="The member to get the mutes for.",
+        case_id="Specify a specific case_id to get information about it.",
     )
     @db_check()
     @is_admin()
-    async def warnings(
+    async def mutes(
         self,
         interaction: Interaction,
         member: discord.Member,
@@ -109,8 +111,8 @@ class Warnings(commands.Cog):
         if case_id:
             await self.find_case_by_id(case_id, interaction, member)
 
-        await self.find_warnings(member, interaction)
+        await self.find_mutes(member, interaction)
 
 
 async def setup(bot: "Sassy"):
-    await bot.add_cog(Warnings(bot))
+    await bot.add_cog(Mutes(bot))

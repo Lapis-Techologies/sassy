@@ -1,6 +1,4 @@
 from typing import TYPE_CHECKING
-from time import time
-from asyncio import sleep
 from discord import Embed
 
 
@@ -8,34 +6,15 @@ if TYPE_CHECKING:
     from main import Sassy
 
 
-async def watch_poll(bot: "Sassy", poll_id: str) -> None:
-    polls_db = bot.database["polls"]
-    poll = await polls_db.find_one({"id": poll_id})
-    end_date = poll["end_date"]
-    finished = poll["finished"]
-
-    if finished:
-        return
-
-    now = time()
-    time_left = end_date - now
-    if time_left > 0:
-        bot.loop.create_task(_finish_poll(bot, polls_db, poll_id, time_left))
-    else:
-        bot.loop.create_task(_finish_poll(bot, polls_db, poll_id, 0))
-
-
-async def _finish_poll(bot: "Sassy", poll_db, poll_id: str, time_left) -> None:
-    await sleep(time_left)
-    await poll_db.update_one({"id": poll_id}, {"$set": {"finished": True}})
-    poll = await poll_db.find_one({"id": poll_id})
+async def callback(bot: "Sassy", poll: dict):
     channel_id = poll["channel"]
-    channel = await bot.fetch_channel(channel_id)
     user_id = poll["uid"]
-    user = await bot.fetch_user(user_id)
     question = poll["question"]
     final_votes = poll["votes"]
     options = poll["answers"]
+
+    channel = await bot.fetch_channel(channel_id)
+    user = await bot.fetch_user(user_id)
 
     biggest = (0, 0)
     for i, vote in enumerate(final_votes):

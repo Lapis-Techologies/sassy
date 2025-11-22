@@ -12,6 +12,11 @@ class Leaderboard(commands.Cog):
     def __init__(self, bot: "Sassy"):
         self.bot = bot
         self.user_db = self.bot.database["user"]
+        self.level_multiplier = float(self.bot.config.get("xp", "multipliers", "level"))
+        self.choomah_coin_multiplier = float(
+            self.bot.config.get("xp", "multipliers", "choomah_coins")
+        )
+        self.bumps_multiplier = float(self.bot.config.get("xp", "multipliers", "bumps"))
 
     async def top(self, amount: int) -> Embed:
         curs = await self.user_db.aggregate(
@@ -19,10 +24,30 @@ class Leaderboard(commands.Cog):
                 {
                     "$addFields": {
                         "overall_score": {
-                            "$add": [
-                                {"$multiply": ["$level", 1]},
-                                {"$multiply": ["$choomah_coins", 0.5]},
-                                {"$multiply": ["$bumps", 1.1]},
+                            "$round": [
+                                {
+                                    "$add": [
+                                        {
+                                            "$multiply": [
+                                                "$level",
+                                                self.level_multiplier,
+                                            ]
+                                        },
+                                        {
+                                            "$multiply": [
+                                                "$choomah_coins",
+                                                self.choomah_coin_multiplier,
+                                            ]
+                                        },
+                                        {
+                                            "$multiply": [
+                                                "$bumps",
+                                                self.bumps_multiplier,
+                                            ]
+                                        },
+                                    ]
+                                },
+                                2,
                             ]
                         }
                     }
@@ -45,7 +70,7 @@ class Leaderboard(commands.Cog):
 
             embed.add_field(
                 name=f"{i + 1}. {user.name}",
-                value=f"Score: ***{entry['overall_score']}***",
+                value=f"Score: ***{round(float(entry['overall_score']), 2)}***",
                 inline=False,
             )
 
@@ -57,9 +82,9 @@ class Leaderboard(commands.Cog):
     )
     @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
     @db_check()
-    async def leaderboard(self, inter: Interaction) -> None:
+    async def leaderboard(self, interaction: Interaction) -> None:
         embed = await self.top(10)
-        await inter.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot):

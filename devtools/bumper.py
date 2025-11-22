@@ -1,4 +1,5 @@
-from importlib import import_module
+import os
+import importlib.util
 from io import StringIO
 from pathlib import Path
 from collections import namedtuple
@@ -10,14 +11,14 @@ Version = namedtuple("Version", ["MAJOR", "MINOR", "PATCH"])
 
 def update_markdown(version: str) -> None:
     """Update the version badge in README.md."""
-    with open("README.md", "r") as readme:
+    with open("../README.md", "r") as readme:
         lines = readme.readlines()
 
     new_line = f'    <img alt="Version" src="https://img.shields.io/badge/Version-{version}-green">\n'
     for i, line in enumerate(lines):
         if '<img alt="Version' in line:
             lines[i] = new_line
-            with open("README.md", "w") as readme:
+            with open("../README.md", "w") as readme:
                 readme.writelines(lines)
             return
     print("[-] Couldn't find version tag inside readme file!")
@@ -25,16 +26,23 @@ def update_markdown(version: str) -> None:
 
 def load_version() -> Version:
     """Load the version file or create a default if it doesn't exist."""
+
+    version_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "version.py"
+    )
+
     try:
-        module = import_module("version")
-        return variable_check(module)
-    except ImportError as e:
-        if Path("version.py").exists():
+        spec = importlib.util.spec_from_file_location("version", version_path)
+        version_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(version_module)
+        return variable_check(version_module)
+    except (FileNotFoundError, AttributeError) as e:
+        if Path("../version.py").exists():
             raise ValueError("version.py is malformed!") from e
         else:
-            with open("version.py", "w") as file:
-                file.write("MAJOR = 0\nMINOR = 0\nPATCH = 0\n")
-            return Version(0, 0, 0)
+            version = Version(0, 0, 0, 0)
+            write(version)
+            return version
 
 
 def variable_check(version) -> Version:
@@ -46,28 +54,35 @@ def variable_check(version) -> Version:
     )
 
 
-def update_version(changes: tuple[int, int, int], version: Version) -> Version:
+def update_version(
+    changes: tuple[int, int, int], version: Version
+) -> Version:
     """
     Update version based on changes (increment/decrement for major, minor, patch).
     Returns new Version tuple, ensuring non-negative values.
     """
     major_change, minor_change, patch_change = changes
-    new_major, new_minor, new_patch = version.MAJOR, version.MINOR, version.PATCH
+    major, minor, patch = (
+        version.MAJOR,
+        version.MINOR,
+        version.PATCH,
+    )
 
     if major_change != 0:
-        new_major += major_change
-        new_minor, new_patch = 0, 0
+        major += major_change
+        minor = 0
+        patch = 0
     elif minor_change != 0:
-        new_minor += minor_change
-        new_patch = 0
+        minor += minor_change
+        patch = 0
     elif patch_change != 0:
-        new_patch += patch_change
+        patch += patch_change
 
     # Validate non-negative version numbers
-    if new_major < 0 or new_minor < 0 or new_patch < 0:
+    if major < 0 or minor < 0 or patch < 0:
         raise ValueError("Version numbers cannot be negative!")
 
-    return Version(new_major, new_minor, new_patch)
+    return Version(major, minor, patch)
 
 
 def write(version: Version) -> None:
@@ -79,7 +94,7 @@ def write(version: Version) -> None:
     script.write(f"MINOR = {version.MINOR}\n")
     script.write(f"PATCH = {version.PATCH}\n")
 
-    with open("version.py", "w") as file:
+    with open("../version.py", "w") as file:
         script.seek(0)
         file.write(script.read())
 
@@ -124,10 +139,12 @@ def main() -> None:
             args.decrement_patch,
         ]
     ):
-        print(f"{version.MAJOR}.{version.MINOR}.{version.PATCH}")
+        print(
+            f"{version.MAJOR}.{version.MINOR}.{version.PATCH}"
+        )
         return
 
-    # Validate that only one type of update is specified
+
     updates = [
         (args.major, "major increment"),
         (args.decrement_major, "major decrement"),
@@ -142,7 +159,9 @@ def main() -> None:
             "Only one version update (increment or decrement) can be specified at a time."
         )
     elif len(active_updates) == 0:
-        print(f"Sassy Bot Version {version.MAJOR}.{version.MINOR}.{version.PATCH}")
+        print(
+            f"Sassy Bot Version {version.MAJOR}.{version.MINOR}.{version.PATCH}"
+        )
         return
 
     # Determine changes

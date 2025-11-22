@@ -9,9 +9,18 @@ class SchemaValidator:
     """
 
     # Type validators
+
+    @staticmethod
+    def is_number(value: Any) -> bool:
+        return SchemaValidator.is_int(value) or SchemaValidator.is_float(value)
+
     @staticmethod
     def is_int(value: Any) -> bool:
         return isinstance(value, int)
+
+    @staticmethod
+    def is_float(value: Any) -> bool:
+        return isinstance(value, float)
 
     @staticmethod
     def is_str(value: Any) -> bool:

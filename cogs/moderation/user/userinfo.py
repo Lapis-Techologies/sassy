@@ -46,10 +46,11 @@ class UserInfo(commands.Cog):
     @app_commands.command(
         name="userinfo", description="View information about a specified user."
     )
+    @app_commands.describe(member="The member to get info about.")
     @db_check()
     @is_admin()
-    async def userinfo(self, inter: Interaction, member: discord.Member):
-        await inter.response.defer()
+    async def userinfo(self, interaction: Interaction, member: discord.Member):
+        await interaction.response.defer()
 
         embed = discord.Embed(
             title=f"User Information for {member} ({member.id})", color=0x00FF00
@@ -68,7 +69,7 @@ class UserInfo(commands.Cog):
                 name="Logs", value="No logs found for this user.", inline=False
             )
 
-            await inter.followup.send(embed=embed)
+            await interaction.followup.send(embed=embed)
             return
 
         logs = curs["logs"]
@@ -78,13 +79,13 @@ class UserInfo(commands.Cog):
                 name="Logs", value="No logs found for this user.", inline=False
             )
 
-            await inter.followup.send(embed=embed)
+            await interaction.followup.send(embed=embed)
             return
 
         embeds = self.make_embeds(logs, member, embed)
 
         for embed in embeds:
-            await inter.followup.send(embed=embed)
+            await interaction.followup.send(embed=embed)
 
 
 async def setup(bot: "Sassy"):

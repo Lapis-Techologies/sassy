@@ -15,10 +15,10 @@ class Smoke(commands.Cog):
         self.user_db = self.bot.database["user"]
 
     @app_commands.command(name="smoke", description="Smoke a quick one with Lez.")
-    @app_commands.checks.cooldown(1, 15, key=lambda i: (i.guild_id, i.user.id))
+    @app_commands.checks.cooldown(1, 20, key=lambda i: (i.guild_id, i.user.id))
     @db_check()
-    async def smoke(self, inter: Interaction) -> None:
-        user = inter.user
+    async def smoke(self, interaction: Interaction) -> None:
+        user = interaction.user
         coins_found = random.randint(0, 5)
         curs = await self.user_db.find_one(
             {"uid": user.id}, projection={"choomah_coins": 1}
@@ -30,7 +30,7 @@ class Smoke(commands.Cog):
             {"uid": user.id}, {"$set": {"choomah_coins": new_bal}}
         )
 
-        await inter.response.send_message(
+        await interaction.response.send_message(
             f"You go smoking with Lez and the mates and find **{coins_found}** choomah coins! Your new balance is ***{new_bal}***"
         )
 

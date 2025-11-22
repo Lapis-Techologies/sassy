@@ -13,8 +13,7 @@
     <img alt="Python Library" src="https://img.shields.io/badge/Library-discord.py-blue">
     <img alt="Platforms" src="https://img.shields.io/badge/Platforms-Windows 10 | Windows 11 | Linux (Debian)-green">
     <img alt="PRs" src="https://img.shields.io/badge/PRs-welcome-green">
-    <img alt="Version" src="https://img.shields.io/badge/Version-2.3.9-green">
-    <img alt="Stable" src="https://img.shields.io/badge/Status-Unstable-red">
+    <img alt="Version" src="https://img.shields.io/badge/Version-2.4.0-green">
 </p>
 
 [//]: # (Quick Menu)
@@ -65,59 +64,66 @@ Setup is simple, with almost all configuration done in `config.json`.
 {
   "database": {
     "dev": false,
-    "url": "mongodb://localhost:27017/",
-    "name": "coolname"
+    "url": "mongodb+srv://username:password@name.node.mongodb.net/?retryWrites=true&w=majority&appName=ClusterName",
+    "name": "sassy"
   },
   "bot": {
-    "token": "wowie.this.isaconfig",
+    "token": "very.secret.token",
     "prefix": ".",
     "starboard": 5
   },
   "guild": {
-    "id": 1234567890,
+    "id": 1234,
     "roles": {
-      "admin": 1234567890,
-      "dev": 1234567890,
+      "admin": 1234,
+      "dev": 1234,
       "reactions": {
-        "message": 1234567890,
-        "rofl": 1234567890,  # REMOVE ME! FORMAT: EMOJI: ROLE
-        "1234567890": 1234567890
+        "message": 1234,
+        "1234": 1234,
+        "🤣": 1234
       }
     },
     "channels": {
-      "welcome": 1234567890,
-      "logs": 1234567890,
-      "drops": 1234567890,
-      "starboard": 1234567890,
+      "welcome": 1234,
+      "logs": 1234,
+      "drops": 1234,
+      "starboard": 1234,
+      "reaction_role": 1234,
+      "rules": 1234,
       "bump": {
-        "id": 1234567890,
-        "bot": 1234567890
+        "id": 1234,
+        "bot": 1234
       }
     }
   },
   "xp": {
     "rewards": {
-      "5": 1234567890,
-      "10": 1234567890,
-      "15": 1234567890,
-      "20": 1234567890
+      "5": 1234,
+      "10": 1234,
+      "15": 1234,
+      "20": 1234
+    },
+    "multipliers": {
+      "level": 1,
+      "choomah_coins": 0.5,
+      "bumps": 1.1
     }
   },
   "commands": {
     "poll": {
-      "1": 1234567890,
-      "2": 1234567890,
-      "3": 1234567890,
-      "4": 1234567890,
-      "5": 1234567890,
-      "6": 1234567890,
-      "7": 1234567890,
-      "8": 1234567890,
-      "9": 1234567890,
-      "10": 1234567890
+      "1": 1234,
+      "2": 1234,
+      "3": 1234,
+      "4": 1234,
+      "5": 1234,
+      "6": 1234,
+      "7": 1234,
+      "8": 1234,
+      "9": 1234,
+      "10": 1234
     }
+  }
 }
-
 ```
 
 # Join us!
