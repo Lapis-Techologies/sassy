@@ -1,9 +1,0 @@
-- Redid Example config
-- Removed redundant build
-- Cleaned up files to follow PEP8
-- Added "achievements" for bumping the server
-- Added purge command
-- Added Proper shutdown
-	- Close Async Gens
-- Added Startup Message
-	- Signify when the bot turns on
